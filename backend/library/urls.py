@@ -1,7 +1,16 @@
 from django.urls import path
-import library.views as views  # Import the whole module
+from .views import (
+    RegisterView,
+    LoginView,
+    BookListCreateView,
+    BookDetailView,
+    GoogleLoginView,
+)
 
 urlpatterns = [
-    path("books/", views.get_books),
-    path("books/add/", views.add_book),
+    path("register/", RegisterView.as_view(), name="register"),
+    path("login/", LoginView.as_view(), name="login"),
+    path("books/", BookListCreateView.as_view(), name="book-list"),
+    path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
+    path("auth/google/", GoogleLoginView.as_view(), name="google-login"),
 ]

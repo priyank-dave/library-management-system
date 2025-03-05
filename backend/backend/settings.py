@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "library",
+    "rest_framework_simplejwt",
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,27 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 CORS_ALLOW_ALL_ORIGINS = True
+
+AUTHENTICATION_BACKENDS = [
+    "library.authentication.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+# Set the user model to authenticate using email instead of username
+AUTH_USER_MODEL = "library.User"
+
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+GOOGLE_CLIENT_ID = (
+    "1039262952226-dbopsip4r1d55gldlhvuok27bn83cbfm.apps.googleusercontent.com"
+)
 
 ROOT_URLCONF = "backend.urls"
 
