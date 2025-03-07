@@ -6,8 +6,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "@/context/AuthContext"; // Import AuthContext
 
 const Login = () => {
+  const { loginUser, loginWithGoogle } = useAuth(); // Use AuthContext
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -26,26 +28,10 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
+      await loginUser(form.email, form.password); // Use context function
       router.push("/"); // Redirect after login
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -54,16 +40,7 @@ const Login = () => {
   // Handle Google Login Success
   const handleGoogleSuccess = async (response) => {
     try {
-      const token = response.credential;
-      const res = await axios.post("http://127.0.0.1:8000/api/auth/google/", {
-        token,
-      });
-
-      // Store JWT tokens
-      localStorage.setItem("access_token", res.data.access_token);
-      localStorage.setItem("refresh_token", res.data.refresh_token);
-
-      console.log("User authenticated:", res.data.user);
+      await loginWithGoogle(response.credential); // Use context function
       router.push("/"); // Redirect after Google login
     } catch (error) {
       setError("Google login failed. Try again.");

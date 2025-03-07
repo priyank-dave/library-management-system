@@ -5,6 +5,7 @@ from .views import (
     BookListCreateView,
     BookDetailView,
     GoogleLoginView,
+    UserDetailView,
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path("books/", BookListCreateView.as_view(), name="book-list"),
     path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
     path("auth/google/", GoogleLoginView.as_view(), name="google-login"),
+    path("user/", UserDetailView.as_view(), name="user-detail"),  # Added endpoint
 ]
