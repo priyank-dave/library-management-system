@@ -1,33 +1,18 @@
 @import "tailwindcss";
 
-/* Catppuccin Mocha (Dark) Theme Colors */
 :root {
-  --ctp-base: #1e1e2e;
-  --ctp-surface0: #313244;
-  --ctp-surface1: #45475a;
-  --ctp-text: #cdd6f4;
-  --ctp-subtext: #a6adc8;
-  --ctp-green: #a6e3a1;
-  --ctp-blue: #89b4fa;
-  --ctp-red: #f38ba8;
-  --ctp-yellow: #f9e2af;
+  /* Light Mode Colors */
+  --primary-color: #635BFF;
+  --secondary-color: #5F5F5F;
+  --text-white: #FFFFFF;
+  --text-black: #222222;
+  --icon-color: #526B7A;
+  --bg-dark-blue: #0A2540;
+  --border-color: #E3E7EA;
+  --bg-light: #FFFFFF;
+  --card-title: #29343D;
 }
 
-/* Catppuccin Latte (Light) Theme Colors */
-[data-theme="latte"] {
-  --ctp-base: #eff1f5;
-  --ctp-surface0: #ccd0da;
-  --ctp-surface1: #bcc0cc;
-  --ctp-text: #4c4f69;
-  --ctp-subtext: #6c6f85;
-  --ctp-green: #40a02b;
-  --ctp-blue: #1e66f5;
-  --ctp-red: #d20f39;
-  --ctp-yellow: #df8e1d;
-}
-
-body {
-  background-color: var(--ctp-base);
-  color: var(--ctp-text);
-  font-family: 'Geist', sans-serif;
+button {
+  cursor: pointer;
 }

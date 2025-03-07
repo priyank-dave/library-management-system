@@ -1,117 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Moon, Sun, Menu, X } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { BookOpen, ChevronDown } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
-  const [theme, setTheme] = useState("mocha");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
+  const { user, logoutUser } = useAuth(); // Changed from `logout` to `logoutUser`
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "mocha";
-    setTheme(savedTheme);
-    document.documentElement.setAttribute("data-theme", savedTheme);
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "mocha" ? "latte" : "mocha";
-    setTheme(newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
+  const handleLogout = () => {
+    logoutUser(); // Calls updated logout function
+    setDropdownOpen(false);
   };
 
   return (
-    <nav className="bg-[var(--ctp-surface0)] shadow-md px-6 py-4">
-      <div className="container mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/logo/site-logo.webp"
-            alt="Library Logo"
-            width={45}
-            height={45}
-          />
-          <span className="text-[var(--ctp-text)] text-xl font-bold">
-            LibRead
-          </span>
-        </Link>
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg transition-colors duration-300 
-             bg-[var(--ctp-surface1)] hover:bg-[var(--ctp-subtext0)] 
-             flex items-center justify-center cursor-pointer"
-            aria-label="Toggle Theme"
-          >
-            {theme === "mocha" ? (
-              <Sun className="text-[var(--ctp-yellow)]" size={24} />
-            ) : (
-              <Moon className="text-[var(--ctp-blue)]" size={24} />
-            )}
-          </button>
-
+    <nav className="bg-[var(--bg-light)] border-b border-[var(--border-color)] shadow-md">
+      <div className="container mx-auto flex justify-between items-center px-6 py-3">
+        {/* Left: Logo */}
+        <div className="flex items-center">
           <Link
-            href="/login"
-            className="bg-[var(--ctp-green)] text-[var(--ctp-base)] px-5 py-2 rounded-lg hover:bg-[var(--ctp-blue)] hover:text-[var(--ctp-base)] transition duration-300 font-semibold"
+            href="/"
+            className="text-xl font-bold text-[var(--primary-color)] flex items-center gap-2 border-[1px] border-[var(--primary-color)] px-3 py-1 rounded-lg"
           >
-            Login
-          </Link>
-
-          <Link
-            href="/signup"
-            className="bg-[var(--ctp-green)] text-[var(--ctp-base)] px-5 py-2 rounded-lg hover:bg-[var(--ctp-blue)] hover:text-[var(--ctp-base)] transition duration-300 font-semibold"
-          >
-            Signup
+            <BookOpen className="w-6 h-6 text-[var(--primary-color)]" />
+            Aspire LMS
           </Link>
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden p-2 rounded-lg transition-colors duration-300 bg-[var(--ctp-surface1)] hover:bg-[var(--ctp-subtext)]"
-        >
-          {menuOpen ? (
-            <X size={24} className="text-[var(--ctp-text)]" />
+        {/* Right: Auth & Profile Section */}
+        <div className="flex items-center gap-4">
+          {user ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 border border-[var(--primary-color)] px-3 py-2 rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition"
+              >
+                <img
+                  src={user.profile_picture || "/default-profile.png"}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span>{user.first_name}</span>
+                <ChevronDown className="w-5 h-5" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={() => {
+                      router.push("/profile");
+                      setDropdownOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    My Profile
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
-            <Menu size={24} className="text-[var(--ctp-text)]" />
+            <>
+              <Link
+                href="/login"
+                className="px-4 py-2 border border-[var(--primary-color)] text-[var(--primary-color)] rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="px-4 py-2 border border-[var(--primary-color)] text-[var(--primary-color)] rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition"
+              >
+                Sign Up
+              </Link>
+            </>
           )}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="md:hidden flex flex-col items-center gap-4 mt-4 pb-4 border-t border-[var(--ctp-subtext)]">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg transition-colors duration-300 bg-[var(--ctp-surface1)] hover:bg-[var(--ctp-subtext)]"
-            aria-label="Toggle Theme"
-          >
-            {theme === "mocha" ? (
-              <Sun className="text-[var(--ctp-yellow)]" size={24} />
-            ) : (
-              <Moon className="text-[var(--ctp-blue)]" size={24} />
-            )}
-          </button>
-
-          <Link
-            href="/login"
-            className="w-full text-center bg-[var(--ctp-green)] text-[var(--ctp-base)] px-5 py-2 rounded-lg hover:bg-[var(--ctp-blue)] hover:text-[var(--ctp-base)] transition duration-300 font-semibold"
-          >
-            Login
-          </Link>
-
-          <Link
-            href="/signup"
-            className="w-full text-center bg-[var(--ctp-green)] text-[var(--ctp-base)] px-5 py-2 rounded-lg hover:bg-[var(--ctp-blue)] hover:text-[var(--ctp-base)] transition duration-300 font-semibold"
-          >
-            Signup
-          </Link>
         </div>
-      )}
+      </div>
     </nav>
   );
 };
