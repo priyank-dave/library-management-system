@@ -24,13 +24,22 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    first_name = models.CharField(
+        max_length=50, default="Unknown"
+    )  # Default value added
+    last_name = models.CharField(
+        max_length=50, default="Unknown"
+    )  # Default value added
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []  # No extra required fields
+    REQUIRED_FIELDS = [
+        "first_name",
+        "last_name",
+    ]  # Ensure they are required in superuser creation
 
     def __str__(self):
         return self.email

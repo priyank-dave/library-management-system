@@ -7,9 +7,14 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
-const Login = () => {
+const Signup = () => {
   const router = useRouter();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,17 +24,19 @@ const Login = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle JWT Login
+  // Handle JWT Signup
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login/", {
+      const response = await fetch("http://127.0.0.1:8000/api/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          first_name: form.firstName,
+          last_name: form.lastName,
           email: form.email,
           password: form.password,
         }),
@@ -38,12 +45,12 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(data.error || "Signup failed");
       }
 
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
-      router.push("/"); // Redirect after login
+      router.push("/"); // Redirect after signup
     } catch (err) {
       setError(err.message);
     } finally {
@@ -51,7 +58,7 @@ const Login = () => {
     }
   };
 
-  // Handle Google Login Success
+  // Handle Google Signup Success
   const handleGoogleSuccess = async (response) => {
     try {
       const token = response.credential;
@@ -64,9 +71,9 @@ const Login = () => {
       localStorage.setItem("refresh_token", res.data.refresh_token);
 
       console.log("User authenticated:", res.data.user);
-      router.push("/"); // Redirect after Google login
+      router.push("/"); // Redirect after Google signup
     } catch (error) {
-      setError("Google login failed. Try again.");
+      setError("Google signup failed. Try again.");
     }
   };
 
@@ -84,15 +91,36 @@ const Login = () => {
           />
         </div>
 
-        {/* Right: Login Form */}
+        {/* Right: Signup Form */}
         <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8">
           <h2 className="text-3xl font-bold text-[var(--primary-color)] mb-6">
-            Login to Your Account
+            Create an Account
           </h2>
 
           {error && <p className="text-red-500">{error}</p>}
 
           <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
+            <div className="flex gap-4">
+              <input
+                type="text"
+                name="firstName"
+                placeholder="First Name"
+                value={form.firstName}
+                onChange={handleChange}
+                required
+                className="w-1/2 px-4 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+              />
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name"
+                value={form.lastName}
+                onChange={handleChange}
+                required
+                className="w-1/2 px-4 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+              />
+            </div>
+
             <input
               type="email"
               name="email"
@@ -118,11 +146,11 @@ const Login = () => {
               className="w-full bg-[var(--primary-color)] text-white py-2 rounded-lg hover:opacity-90 transition"
               disabled={loading}
             >
-              {loading ? "Logging In..." : "Login"}
+              {loading ? "Signing Up..." : "Sign Up"}
             </button>
           </form>
 
-          {/* Google Login */}
+          {/* Google Signup */}
           <div className="mt-4 w-full max-w-md">
             <div className="flex justify-center mt-2">
               <GoogleLogin
@@ -132,14 +160,14 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Don't have an account? */}
+          {/* Already have an account? */}
           <p className="mt-4 text-[var(--secondary-color)]">
-            Don&apos;t have an account?{" "}
+            Already have an account?{" "}
             <Link
-              href="/signup"
+              href="/login"
               className="text-[var(--primary-color)] font-medium"
             >
-              Sign Up
+              Login
             </Link>
           </p>
         </div>
@@ -148,4 +176,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
