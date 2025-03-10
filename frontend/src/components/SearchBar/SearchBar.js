@@ -15,7 +15,8 @@ const SearchBar = ({ books, onSearchResults }) => {
 
       const fuse = new Fuse(books, {
         keys: ["title", "author"],
-        threshold: 0.3, // Adjust for accuracy
+        ignoreLocation: true, // Matches anywhere in the string
+        findAllMatches: true,
       });
 
       const results = fuse.search(searchTerm).map((result) => result.item);
