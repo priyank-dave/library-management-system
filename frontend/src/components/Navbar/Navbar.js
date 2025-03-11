@@ -5,10 +5,12 @@ import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
+const HOST = "http://127.0.0.1:8000/";
 const Navbar = () => {
   const router = useRouter();
-  const { user, logoutUser } = useAuth(); // Changed from `logout` to `logoutUser`
+  const { user, logoutUser } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -25,7 +27,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    logoutUser(); // Calls updated logout function
+    logoutUser();
     setDropdownOpen(false);
   };
 
@@ -51,10 +53,13 @@ const Navbar = () => {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center gap-2 border border-[var(--primary-color)] px-3 py-2 rounded-lg hover:bg-[var(--primary-color)] hover:text-white transition"
               >
-                <img
-                  src={user.profile_picture || "/default-profile.png"}
+                <Image
+                  src={user.profile_picture}
                   alt="Profile"
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-full object-cover"
+                  unoptimized
                 />
                 <span>{user.first_name}</span>
                 <ChevronDown className="w-5 h-5" />
@@ -65,7 +70,7 @@ const Navbar = () => {
                 <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
                   <button
                     onClick={() => {
-                      router.push("/profile");
+                      router.push("/user/profile");
                       setDropdownOpen(false);
                     }}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"

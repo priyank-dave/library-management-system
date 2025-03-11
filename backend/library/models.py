@@ -4,6 +4,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
+from django.utils.timezone import now
 
 
 class CustomUserManager(BaseUserManager):
@@ -28,9 +29,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50, default="Unknown")
     profile_picture = models.ImageField(
         upload_to="profile_pictures/", null=True, blank=True
-    )  # New field
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=now)  # Account creation date
 
     objects = CustomUserManager()
 

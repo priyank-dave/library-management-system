@@ -4,6 +4,8 @@ from .models import User, Book
 
 
 class UserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(required=False)  # Ensure it's optional
+
     class Meta:
         model = User
         fields = (
@@ -11,19 +13,40 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
-            "password",
             "profile_picture",
+            "date_joined",
+            "last_login",
+            "password",
         )
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "date_joined": {"read_only": True},
+            "last_login": {"read_only": True},
+        }
+
+    def update(self, instance, validated_data):
+        if "profile_picture" in validated_data:
+            if instance.profile_picture:
+                # Delete previous profile picture before updating
+                instance.profile_picture.delete(save=False)
+        return super().update(instance, validated_data)
 
     def create(self, validated_data):
-        user = User(
-            email=validated_data["email"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
-        )
-        user.set_password(validated_data["password"])
+        password = validated_data.pop("password", None)
+        profile_picture = validated_data.pop("profile_picture", None)  # Extract file
+
+        user = User(**validated_data)
+
+        if password:
+            user.set_password(password)
+
         user.save()
+
+        # Save profile picture separately after user is created
+        if profile_picture:
+            user.profile_picture = profile_picture
+            user.save()
+
         return user
 
 

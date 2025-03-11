@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,6 +60,10 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = "library.User"
 
 SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # Short-lived access token
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # Longer-lived refresh token
+    "ROTATE_REFRESH_TOKENS": True,  # Issue new refresh token on refresh
+    "BLACKLIST_AFTER_ROTATION": True,  # Blacklist old refresh tokens
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
