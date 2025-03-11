@@ -27,14 +27,15 @@ class UserDetailView(APIView):
         serializer = UserSerializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():
-            # Handle profile picture deletion if requested
-            if (
-                "profile_picture" in request.data
-                and not request.data["profile_picture"]
-            ):
-                if user.profile_picture:
-                    default_storage.delete(user.profile_picture.path)
-                user.profile_picture = None
+            # Handle profile picture update and deletion
+            if "profile_picture" in request.data:
+                if not request.data["profile_picture"]:  # User wants to delete
+                    if user.profile_picture:
+                        user.profile_picture.delete(save=False)
+                    user.profile_picture = None
+                else:  # User is uploading a new one
+                    if user.profile_picture:
+                        user.profile_picture.delete(save=False)  # Delete old one
 
             serializer.save()
             return Response(serializer.data)
@@ -44,6 +45,17 @@ class UserDetailView(APIView):
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def post(self, request, *args, **kwargs):
+        print(request.data)  # Debugging: See if profile_picture is received
+
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
