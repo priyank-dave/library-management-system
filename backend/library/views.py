@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from .models import Book
 from .serializers import BookSerializer, UserSerializer, LoginSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.core.files.storage import default_storage
 
 
@@ -120,22 +120,37 @@ class GoogleLoginView(views.APIView):
         )
 
 
+class IsLibrarianOrAdmin(BasePermission):
+    """Custom permission to allow only librarians or admins to modify books."""
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and (
+            request.user.is_librarian or request.user.is_staff
+        )
+
+
 class BookListCreateView(generics.ListCreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
 
     def get_permissions(self):
-        if self.request.method == "POST":
-            user = self.request.user
-            if not user.is_authenticated or not (user.is_librarian or user.is_staff):
-                return [permissions.IsAdminUser()]
-            return [permissions.IsAuthenticated()]
-        return [permissions.AllowAny()]
+        if self.request.method == "POST":  # Only librarians or admins can add books
+            return [IsLibrarianOrAdmin()]
+        return []  # Allows unauthenticated users to view books
 
 
 class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+
+    def get_permissions(self):
+        if self.request.method in [
+            "PUT",
+            "PATCH",
+            "DELETE",
+        ]:  # Editing and deleting require permissions
+            return [IsLibrarianOrAdmin()]
+        return []  # Allows unauthenticated users to view book details
 
 
 class BorrowBookView(APIView):

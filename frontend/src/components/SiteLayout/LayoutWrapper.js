@@ -20,7 +20,7 @@ export default function LayoutWrapper({ children }) {
 
       <div className="flex-1">
         <Navbar toggleSidebar={user ? toggleSidebar : null} />
-        <main className="p-6">{children}</main>
+        <main>{children}</main>
       </div>
     </div>
   );
