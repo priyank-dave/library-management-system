@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-const HOST = "http://127.0.0.1:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const AddBookPage = () => {
   const router = useRouter();
@@ -36,7 +36,7 @@ const AddBookPage = () => {
     }
 
     try {
-      const response = await fetch(`${HOST}/api/books/`, {
+      const response = await fetch(`${API_BASE_URL}/api/books/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,

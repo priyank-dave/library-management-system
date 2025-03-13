@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 
-const HOST = "http://127.0.0.1:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const EditBookPage = () => {
   const router = useRouter();
@@ -22,7 +22,7 @@ const EditBookPage = () => {
     // Fetch book details
     const fetchBook = async () => {
       try {
-        const response = await fetch(`${HOST}/api/books/${id}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/books/${id}/`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
@@ -70,7 +70,7 @@ const EditBookPage = () => {
     }
 
     try {
-      const response = await fetch(`${HOST}/api/books/${id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/books/${id}/`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -79,7 +79,7 @@ const EditBookPage = () => {
       });
 
       if (response.ok) {
-        router.push("/books"); // Redirect to book list after update
+        router.push("/"); // Redirect to book list after update
       } else {
         console.error("Failed to update book");
       }

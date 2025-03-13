@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "profile_picture",
             "date_joined",
+            "is_librarian",
             "last_login",
             "password",
         )
@@ -76,6 +77,10 @@ class LoginSerializer(serializers.Serializer):
 
 
 class BookSerializer(serializers.ModelSerializer):
+    borrowed_by = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), allow_null=True, required=False
+    )
+
     class Meta:
         model = Book
         fields = "__all__"

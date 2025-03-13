@@ -22,6 +22,11 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", True)
         return self.create_user(email, password, **extra_fields)
 
+    def create_librarian(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_librarian", True)
+        extra_fields.setdefault("is_staff", False)
+        return self.create_user(email, password, **extra_fields)
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
@@ -32,7 +37,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(default=now)  # Account creation date
+    date_joined = models.DateTimeField(default=now)
+    is_librarian = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
@@ -43,14 +49,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-# Place the Book model AFTER the User model
+# Update Book Model to Include Borrowing
 class Book(models.Model):
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     published_date = models.DateField()
-    image = models.ImageField(
-        upload_to="book_images/", null=True, blank=True
-    )  # Image field
+    image = models.ImageField(upload_to="book_images/", null=True, blank=True)
+    borrowed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="borrowed_books",
+    )  # Track who borrowed the book
 
     def __str__(self):
         return self.title

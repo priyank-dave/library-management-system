@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
+import Navbar from "@/components/Navbar/Navbar";
+import Sidebar from "@/components/SiteLayout/Sidebar/Sidebar";
 import BookList from "@/components/Books/BookList";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function HomePage() {
   const [books, setBooks] = useState([]);
@@ -7,7 +11,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/books/");
+        const response = await fetch(`${API_BASE_URL}/api/books/`);
         const data = await response.json();
         setBooks(data);
       } catch (error) {
@@ -18,5 +22,9 @@ export default function HomePage() {
     fetchBooks();
   }, []);
 
-  return <BookList books={books} />;
+  return (
+    <div>
+      <BookList books={books} />
+    </div>
+  );
 }

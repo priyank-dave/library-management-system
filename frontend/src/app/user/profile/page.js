@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 
-const HOST = "http://127.0.0.1:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const ProfilePage = () => {
   const { user, fetchUser } = useAuth();
@@ -44,7 +44,7 @@ const ProfilePage = () => {
       const formData = new FormData();
       formData.append("profile_picture", ""); // Send empty string instead of null
 
-      const response = await fetch(`${HOST}/api/user/`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -75,7 +75,7 @@ const ProfilePage = () => {
     }
 
     try {
-      const response = await fetch(`${HOST}/api/user/`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,

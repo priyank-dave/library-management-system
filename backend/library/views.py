@@ -47,14 +47,16 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
-        print(request.data)  # Debugging: See if profile_picture is received
+        data = request.data.copy()
+        is_librarian = data.get("is_librarian", False)  # Check if librarian signup
 
-        serializer = self.get_serializer(data=request.data)
-
+        serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            if is_librarian:
+                user.is_librarian = True
+                user.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -124,10 +126,59 @@ class BookListCreateView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == "POST":
-            return [permissions.IsAuthenticated()]  # Require JWT for creating a book
+            user = self.request.user
+            if not user.is_authenticated or not (user.is_librarian or user.is_staff):
+                return [permissions.IsAdminUser()]
+            return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
 
 class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+
+
+class BorrowBookView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, book_id):
+        try:
+            book = Book.objects.get(id=book_id)
+            if book.borrowed_by:
+                return Response(
+                    {"error": "Book is already borrowed"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            book.borrowed_by = request.user
+            book.save()
+            return Response(
+                {"message": "Book borrowed successfully"}, status=status.HTTP_200_OK
+            )
+        except Book.DoesNotExist:
+            return Response(
+                {"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ReturnBookView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, book_id):
+        try:
+            book = Book.objects.get(id=book_id)
+            if book.borrowed_by != request.user:
+                return Response(
+                    {"error": "You did not borrow this book"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            book.borrowed_by = None
+            book.save()
+            return Response(
+                {"message": "Book returned successfully"}, status=status.HTTP_200_OK
+            )
+        except Book.DoesNotExist:
+            return Response(
+                {"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND
+            )

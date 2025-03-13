@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ChevronDown } from "lucide-react";
+import { BookOpen, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 
-const HOST = "http://127.0.0.1:8000/";
-const Navbar = () => {
+const Navbar = ({ toggleSidebar }) => {
   const router = useRouter();
   const { user, logoutUser } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -34,8 +33,14 @@ const Navbar = () => {
   return (
     <nav className="bg-[var(--bg-light)] border-b border-[var(--border-color)] shadow-md">
       <div className="container mx-auto flex justify-between items-center px-6 py-3">
-        {/* Left: Logo */}
-        <div className="flex items-center">
+        {/* Left: Sidebar Toggle + Logo */}
+        <div className="flex items-center gap-4">
+          {/* Hide toggle button if user is not authenticated */}
+          {user && (
+            <button onClick={toggleSidebar} className="p-2 text-gray-700">
+              <Menu className="w-6 h-6" />
+            </button>
+          )}
           <Link
             href="/"
             className="text-xl font-bold text-[var(--primary-color)] flex items-center gap-2 border-[1px] border-[var(--primary-color)] px-3 py-1 rounded-lg"

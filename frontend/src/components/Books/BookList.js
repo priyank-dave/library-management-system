@@ -6,7 +6,7 @@ const BookList = ({ books }) => {
   const [filteredBooks, setFilteredBooks] = useState(books);
 
   return (
-    <div className="max-w-screen-xl mx-auto py-12 px-4">
+    <div className="max-w-screen-xl mx-auto py-12 px-4 ">
       <h2 className="text-3xl font-bold text-[var(--text-black)] mb-6">
         Explore Our Collection
       </h2>
@@ -44,7 +44,7 @@ const BookList = ({ books }) => {
                   src={book.image || "/default-book.jpg"}
                   alt={book.title}
                   layout="fill"
-                  objectFit="contain"
+                  objectFit="cover"
                   className="rounded-t-lg"
                   unoptimized
                 />
