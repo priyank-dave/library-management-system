@@ -35,6 +35,16 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         </li>
 
         <li
+          onClick={() => {
+            router.push("/user/borrowed-books"); // Navigate to the borrowed books page
+            toggleSidebar(); // Close sidebar after clicking
+          }}
+          className="p-4 hover:bg-gray-700 cursor-pointer"
+        >
+          Borrowed Books
+        </li>
+
+        <li
           onClick={handleLogout}
           className="p-4 hover:bg-gray-700 cursor-pointer"
         >
