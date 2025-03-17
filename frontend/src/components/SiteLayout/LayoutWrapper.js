@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/SiteLayout/Sidebar/Sidebar";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/SiteLayout/Navbar/Navbar";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LayoutWrapper({ children }) {

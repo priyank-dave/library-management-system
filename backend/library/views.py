@@ -138,6 +138,11 @@ class BookListCreateView(generics.ListCreateAPIView):
             return [IsLibrarianOrAdmin()]
         return []  # Allows unauthenticated users to view books
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request  # Pass the request for `borrowed_by` field
+        return context
+
 
 class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Book.objects.all()

@@ -77,10 +77,26 @@ class LoginSerializer(serializers.Serializer):
 
 
 class BookSerializer(serializers.ModelSerializer):
-    borrowed_by = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), allow_null=True, required=False
-    )
+    borrowed_by = serializers.SerializerMethodField()
+    is_borrowed = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
-        fields = "__all__"
+        fields = [
+            "id",
+            "title",
+            "author",
+            "published_date",
+            "image",
+            "borrowed_by",
+            "is_borrowed",
+        ]
+
+    def get_borrowed_by(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.borrowed_by.email if obj.borrowed_by else None
+        return None
+
+    def get_is_borrowed(self, obj):
+        return bool(obj.borrowed_by)  # Returns True if borrowed, otherwise False
