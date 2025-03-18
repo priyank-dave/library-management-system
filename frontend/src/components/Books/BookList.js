@@ -26,20 +26,20 @@ const BookList = ({ books }) => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      // Create a Set of borrowed book IDs by the current user
+      // Create a Set of borrowed book ISBNs by the current user
       const borrowedSet = new Set(
         response.data
           .filter((book) => book.borrowed_by === user?.email) // Books borrowed by the current user
-          .map((book) => book.id)
+          .map((book) => book.isbn)
       );
 
-      // Create a Set of borrowed book IDs by other users
+      // Create a Set of borrowed book ISBNs by other users
       const borrowedByOthersSet = new Set(
         response.data
           .filter(
             (book) => book.borrowed_by && book.borrowed_by !== user?.email
           ) // Books borrowed by others
-          .map((book) => book.id)
+          .map((book) => book.isbn)
       );
 
       setBorrowedBooks(borrowedSet);
@@ -49,7 +49,7 @@ const BookList = ({ books }) => {
     }
   };
 
-  const handleBorrowReturn = async (bookId, action) => {
+  const handleBorrowReturn = async (isbn, action) => {
     const confirmMessage =
       action === "borrow"
         ? "Are you sure you want to borrow this book?"
@@ -60,7 +60,7 @@ const BookList = ({ books }) => {
     try {
       const accessToken = localStorage.getItem("access_token");
       await axios.post(
-        `${API_BASE_URL}/api/books/${bookId}/${action}/`,
+        `${API_BASE_URL}/api/books/${isbn}/${action}/`,
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -88,15 +88,15 @@ const BookList = ({ books }) => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mt-6">
           {filteredBooks.map((book) => {
-            const isBorrowed = borrowedBooks.has(book.id);
-            const isBorrowedByOther = borrowedBooksByOthers.has(book.id);
+            const isBorrowed = borrowedBooks.has(book.isbn);
+            const isBorrowedByOther = borrowedBooksByOthers.has(book.isbn);
 
             return (
               <div
-                key={book.id}
+                key={book.isbn}
                 className="relative group flex flex-col items-center w-48 bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-visible cursor-pointer"
               >
-                <Link href={`/books/${book.id}`} passHref className="w-full">
+                <Link href={`/books/${book.isbn}`} passHref className="w-full">
                   {/* Tooltip Wrapper */}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[var(--primary-color)] text-white text-sm p-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-60 z-50 pointer-events-none">
                     <h3 className="font-semibold">{book.title}</h3>
@@ -153,7 +153,7 @@ const BookList = ({ books }) => {
                     } transition`}
                     onClick={() =>
                       handleBorrowReturn(
-                        book.id,
+                        book.isbn,
                         isBorrowed ? "return" : "borrow"
                       )
                     }

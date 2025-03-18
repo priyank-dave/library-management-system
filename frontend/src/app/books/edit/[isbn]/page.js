@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const EditBookPage = () => {
   const router = useRouter();
-  const { id } = useParams();
+  const { isbn } = useParams(); // Updated from id to isbn
 
   const [formData, setFormData] = useState({
     title: "",
@@ -22,7 +22,7 @@ const EditBookPage = () => {
     // Fetch book details
     const fetchBook = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/books/${id}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/books/${isbn}/`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
@@ -49,7 +49,7 @@ const EditBookPage = () => {
     };
 
     fetchBook();
-  }, [id]);
+  }, [isbn]);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -70,7 +70,7 @@ const EditBookPage = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/books/${id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/books/${isbn}/`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,

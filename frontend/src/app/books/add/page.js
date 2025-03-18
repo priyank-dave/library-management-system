@@ -9,11 +9,12 @@ const AddBookPage = () => {
   const router = useRouter();
 
   const [formData, setFormData] = useState({
+    isbn: "",
     title: "",
     author: "",
     published_date: "",
     image: null,
-    pdf: null, // PDF file state
+    pdf: null,
   });
 
   const [preview, setPreview] = useState("/default-book.png"); // Placeholder image
@@ -36,6 +37,7 @@ const AddBookPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formDataToSend = new FormData();
+    formDataToSend.append("isbn", formData.isbn);
     formDataToSend.append("title", formData.title);
     formDataToSend.append("author", formData.author);
     formDataToSend.append("published_date", formData.published_date);
@@ -92,6 +94,17 @@ const AddBookPage = () => {
 
       {/* Book Info Form */}
       <form className="flex flex-col mt-4" onSubmit={handleSubmit}>
+        <label className="text-sm font-medium">
+          ISBN <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.isbn}
+          onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
+          className="border p-2 rounded mb-3"
+          required
+        />
+
         <label className="text-sm font-medium">
           Title <span className="text-red-500">*</span>
         </label>

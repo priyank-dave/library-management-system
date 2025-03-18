@@ -50,7 +50,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Book(models.Model):
-    isbn = models.CharField(max_length=13, unique=True, null=False, blank=False)
+    isbn = models.CharField(
+        max_length=13, unique=True, null=False, blank=False, primary_key=True
+    )
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     published_date = models.DateField()

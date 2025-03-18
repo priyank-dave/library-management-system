@@ -36,7 +36,7 @@ const BorrowedBooks = () => {
     }
   };
 
-  const handleBorrowReturn = async (bookId, action) => {
+  const handleBorrowReturn = async (isbn, action) => {
     const confirmMessage =
       action === "borrow"
         ? "Are you sure you want to borrow this book?"
@@ -47,7 +47,7 @@ const BorrowedBooks = () => {
     try {
       const accessToken = localStorage.getItem("access_token");
       await axios.post(
-        `${API_BASE_URL}/api/books/${bookId}/${action}/`,
+        `${API_BASE_URL}/api/books/${isbn}/${action}/`,
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -64,10 +64,8 @@ const BorrowedBooks = () => {
         Your Borrowed Books
       </h2>
 
-      {/* Search Bar */}
       <SearchBar books={borrowedBooks} onSearchResults={setFilteredBooks} />
 
-      {/* Book Grid */}
       {filteredBooks.length === 0 ? (
         <p className="text-[var(--secondary-color)] text-lg text-center mt-4">
           You have not borrowed any books.
@@ -76,11 +74,10 @@ const BorrowedBooks = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mt-6">
           {filteredBooks.map((book) => (
             <div
-              key={book.id}
+              key={book.isbn}
               className="relative group flex flex-col items-center w-48 bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-visible cursor-pointer"
             >
-              <Link href={`/books/${book.id}`} passHref className="w-full">
-                {/* Tooltip Wrapper */}
+              <Link href={`/books/${book.isbn}`} passHref className="w-full">
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[var(--primary-color)] text-white text-sm p-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-60 z-50 pointer-events-none">
                   <h3 className="font-semibold">{book.title}</h3>
                   <p>by {book.author || "Unknown Author"}</p>
@@ -92,7 +89,6 @@ const BorrowedBooks = () => {
                   )}
                 </div>
 
-                {/* Book Image */}
                 <div className="relative w-full h-72 flex justify-center items-center overflow-hidden rounded-t-lg bg-gray-100">
                   <Image
                     src={book.image || "/default-book.jpg"}
@@ -104,7 +100,6 @@ const BorrowedBooks = () => {
                   />
                 </div>
 
-                {/* Book Details */}
                 <div className="w-full text-center px-3 py-3">
                   <h3 className="text-lg font-semibold text-[var(--card-title)]">
                     {book.title}
@@ -113,17 +108,15 @@ const BorrowedBooks = () => {
                     {book.author || "Unknown Author"}
                   </p>
 
-                  {/* Borrowed Status */}
                   <p className="text-xs font-semibold mt-1 text-gray-600">
                     📖 Borrowed
                   </p>
                 </div>
               </Link>
 
-              {/* Return Button */}
               <button
                 className="mt-2 mb-3 px-4 py-2 text-white text-sm font-semibold rounded-md bg-red-500 hover:bg-red-600 transition"
-                onClick={() => handleBorrowReturn(book.id, "return")}
+                onClick={() => handleBorrowReturn(book.isbn, "return")}
               >
                 Return Book
               </button>

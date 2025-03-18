@@ -147,6 +147,7 @@ class BookListCreateView(generics.ListCreateAPIView):
 class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    lookup_field = "isbn"  # Use ISBN as the lookup field
 
     def get_permissions(self):
         if self.request.method in ["PUT", "PATCH", "DELETE"]:
@@ -155,21 +156,19 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         book = self.get_object()
-        if "pdf" in request.data:
-            if not request.data["pdf"]:  # User wants to remove PDF
-                if book.pdf:
-                    book.pdf.delete(save=False)  # Delete the file
-                book.pdf = None
-
+        if "pdf" in request.data and not request.data["pdf"]:
+            if book.pdf:
+                book.pdf.delete(save=False)
+            book.pdf = None
         return super().update(request, *args, **kwargs)
 
 
 class BorrowBookView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, book_id):
+    def post(self, request, isbn):
         try:
-            book = Book.objects.get(id=book_id)
+            book = Book.objects.get(isbn=isbn)
             if book.borrowed_by:
                 return Response(
                     {"error": "Book is already borrowed"},
@@ -190,9 +189,9 @@ class BorrowBookView(APIView):
 class ReturnBookView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, book_id):
+    def post(self, request, isbn):
         try:
-            book = Book.objects.get(id=book_id)
+            book = Book.objects.get(isbn=isbn)
             if book.borrowed_by != request.user:
                 return Response(
                     {"error": "You did not borrow this book"},

@@ -9,17 +9,17 @@ import { useAuth } from "@/context/AuthContext";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function BookDetailPage() {
-  const { id } = useParams();
+  const { isbn } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Access user info from context
+  const { user } = useAuth();
   const [borrowedBooks, setBorrowedBooks] = useState(new Set());
   const [borrowedBooksByOthers, setBorrowedBooksByOthers] = useState(new Set());
 
   useEffect(() => {
     const fetchBook = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/books/${id}/`);
+        const response = await axios.get(`${API_BASE_URL}/api/books/${isbn}/`);
         setBook(response.data);
       } catch (error) {
         console.error("Failed to fetch book:", error);
@@ -28,8 +28,8 @@ export default function BookDetailPage() {
       }
     };
 
-    if (id) fetchBook();
-  }, [id]);
+    if (isbn) fetchBook();
+  }, [isbn]);
 
   useEffect(() => {
     if (user) {
@@ -44,20 +44,20 @@ export default function BookDetailPage() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      // Create a Set of borrowed book IDs by the current user
+      // Create a Set of borrowed book ISBNs by the current user
       const borrowedSet = new Set(
         response.data
-          .filter((book) => book.borrowed_by === user?.email) // Books borrowed by the current user
-          .map((book) => book.id)
+          .filter((book) => book.borrowed_by === user?.email)
+          .map((book) => book.isbn)
       );
 
-      // Create a Set of borrowed book IDs by other users
+      // Create a Set of borrowed book ISBNs by other users
       const borrowedByOthersSet = new Set(
         response.data
           .filter(
             (book) => book.borrowed_by && book.borrowed_by !== user?.email
-          ) // Books borrowed by others
-          .map((book) => book.id)
+          )
+          .map((book) => book.isbn)
       );
 
       setBorrowedBooks(borrowedSet);
@@ -67,7 +67,7 @@ export default function BookDetailPage() {
     }
   };
 
-  const handleBorrowReturn = async (bookId, action) => {
+  const handleBorrowReturn = async (isbn, action) => {
     const confirmMessage =
       action === "borrow"
         ? "Are you sure you want to borrow this book?"
@@ -78,7 +78,7 @@ export default function BookDetailPage() {
     try {
       const accessToken = localStorage.getItem("access_token");
       await axios.post(
-        `${API_BASE_URL}/api/books/${bookId}/${action}/`,
+        `${API_BASE_URL}/api/books/${isbn}/${action}/`,
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -97,8 +97,8 @@ export default function BookDetailPage() {
     return <div className="text-center py-10 text-red-500">Book not found</div>;
   }
 
-  const isBorrowed = borrowedBooks.has(book.id);
-  const isBorrowedByOther = borrowedBooksByOthers.has(book.id);
+  const isBorrowed = borrowedBooks.has(book.isbn);
+  const isBorrowedByOther = borrowedBooksByOthers.has(book.isbn);
 
   return (
     <div className="container mx-auto px-6 py-10 flex flex-col md:flex-row gap-6 md:gap-2 items-center">
@@ -142,7 +142,7 @@ export default function BookDetailPage() {
         {/* Borrow/Return Button */}
         {user && !isBorrowed && !isBorrowedByOther && (
           <button
-            onClick={() => handleBorrowReturn(book.id, "borrow")}
+            onClick={() => handleBorrowReturn(book.isbn, "borrow")}
             className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition"
           >
             Borrow Book
@@ -152,7 +152,7 @@ export default function BookDetailPage() {
         {/* Return Book Button */}
         {user && isBorrowed && (
           <button
-            onClick={() => handleBorrowReturn(book.id, "return")}
+            onClick={() => handleBorrowReturn(book.isbn, "return")}
             className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
           >
             Return Book

@@ -100,12 +100,10 @@ class BookSerializer(serializers.ModelSerializer):
         return None
 
     def get_is_borrowed(self, obj):
-        return bool(obj.borrowed_by)  # Returns True if borrowed, otherwise False
+        return bool(obj.borrowed_by)
 
     def update(self, instance, validated_data):
-        # Handle PDF replacement
         if "pdf" in validated_data:
             if instance.pdf:
-                instance.pdf.delete(save=False)  # Delete old PDF before replacing
-
+                instance.pdf.delete(save=False)
         return super().update(instance, validated_data)
