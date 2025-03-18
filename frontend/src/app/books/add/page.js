@@ -13,6 +13,7 @@ const AddBookPage = () => {
     author: "",
     published_date: "",
     image: null,
+    pdf: null, // PDF file state
   });
 
   const [preview, setPreview] = useState("/default-book.png"); // Placeholder image
@@ -25,6 +26,13 @@ const AddBookPage = () => {
     }
   };
 
+  const handlePdfChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setFormData({ ...formData, pdf: file });
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formDataToSend = new FormData();
@@ -33,6 +41,9 @@ const AddBookPage = () => {
     formDataToSend.append("published_date", formData.published_date);
     if (formData.image) {
       formDataToSend.append("image", formData.image);
+    }
+    if (formData.pdf) {
+      formDataToSend.append("pdf", formData.pdf); // Append PDF
     }
 
     try {
@@ -45,7 +56,7 @@ const AddBookPage = () => {
       });
 
       if (response.ok) {
-        router.push("/books"); // Redirect to book list after adding
+        router.push("/"); // Redirect to book list after adding
       } else {
         console.error("Failed to add book");
       }
@@ -113,6 +124,18 @@ const AddBookPage = () => {
             setFormData({ ...formData, published_date: e.target.value })
           }
           className="border p-2 rounded mb-3"
+          required
+        />
+
+        {/* PDF Upload Section */}
+        <label className="text-sm font-medium">
+          PDF <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="file"
+          accept="application/pdf"
+          className="border p-2 rounded mb-3"
+          onChange={handlePdfChange}
           required
         />
 

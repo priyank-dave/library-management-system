@@ -83,12 +83,12 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            "id",
+            "isbn",
             "title",
             "author",
             "published_date",
             "image",
-            "pdf",  # Add PDF field
+            "pdf",
             "borrowed_by",
             "is_borrowed",
         ]

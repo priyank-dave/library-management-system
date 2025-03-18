@@ -49,8 +49,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-# Update Book Model to Include Borrowing
 class Book(models.Model):
+    isbn = models.CharField(max_length=13, unique=True, null=False, blank=False)
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     published_date = models.DateField()

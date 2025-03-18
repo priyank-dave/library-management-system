@@ -14,6 +14,7 @@ export default function BookDetailPage() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth(); // Access user info from context
   const [borrowedBooks, setBorrowedBooks] = useState(new Set());
+  const [borrowedBooksByOthers, setBorrowedBooksByOthers] = useState(new Set());
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -50,7 +51,17 @@ export default function BookDetailPage() {
           .map((book) => book.id)
       );
 
+      // Create a Set of borrowed book IDs by other users
+      const borrowedByOthersSet = new Set(
+        response.data
+          .filter(
+            (book) => book.borrowed_by && book.borrowed_by !== user?.email
+          ) // Books borrowed by others
+          .map((book) => book.id)
+      );
+
       setBorrowedBooks(borrowedSet);
+      setBorrowedBooksByOthers(borrowedByOthersSet);
     } catch (error) {
       console.error("Error fetching borrowed books:", error);
     }
@@ -87,6 +98,7 @@ export default function BookDetailPage() {
   }
 
   const isBorrowed = borrowedBooks.has(book.id);
+  const isBorrowedByOther = borrowedBooksByOthers.has(book.id);
 
   return (
     <div className="container mx-auto px-6 py-10 flex flex-col md:flex-row gap-6 md:gap-2 items-center">
@@ -128,7 +140,7 @@ export default function BookDetailPage() {
         )}
 
         {/* Borrow/Return Button */}
-        {user && !isBorrowed && (
+        {user && !isBorrowed && !isBorrowedByOther && (
           <button
             onClick={() => handleBorrowReturn(book.id, "borrow")}
             className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition"
@@ -137,6 +149,7 @@ export default function BookDetailPage() {
           </button>
         )}
 
+        {/* Return Book Button */}
         {user && isBorrowed && (
           <button
             onClick={() => handleBorrowReturn(book.id, "return")}
@@ -144,6 +157,13 @@ export default function BookDetailPage() {
           >
             Return Book
           </button>
+        )}
+
+        {/* Message if Borrowed by Another User */}
+        {isBorrowedByOther && (
+          <p className="mt-4 text-red-500 text-sm font-semibold">
+            This book is currently borrowed by another user.
+          </p>
         )}
       </div>
     </div>
