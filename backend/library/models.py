@@ -55,13 +55,14 @@ class Book(models.Model):
     author = models.CharField(max_length=255)
     published_date = models.DateField()
     image = models.ImageField(upload_to="book_images/", null=True, blank=True)
+    pdf = models.FileField(upload_to="book_pdfs/", null=True, blank=True)
     borrowed_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="borrowed_books",
-    )  # Track who borrowed the book
+    )
 
     def __str__(self):
         return self.title

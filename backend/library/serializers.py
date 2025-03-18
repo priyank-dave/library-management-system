@@ -88,6 +88,7 @@ class BookSerializer(serializers.ModelSerializer):
             "author",
             "published_date",
             "image",
+            "pdf",  # Add PDF field
             "borrowed_by",
             "is_borrowed",
         ]
@@ -100,3 +101,11 @@ class BookSerializer(serializers.ModelSerializer):
 
     def get_is_borrowed(self, obj):
         return bool(obj.borrowed_by)  # Returns True if borrowed, otherwise False
+
+    def update(self, instance, validated_data):
+        # Handle PDF replacement
+        if "pdf" in validated_data:
+            if instance.pdf:
+                instance.pdf.delete(save=False)  # Delete old PDF before replacing
+
+        return super().update(instance, validated_data)

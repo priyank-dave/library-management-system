@@ -149,13 +149,19 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BookSerializer
 
     def get_permissions(self):
-        if self.request.method in [
-            "PUT",
-            "PATCH",
-            "DELETE",
-        ]:  # Editing and deleting require permissions
+        if self.request.method in ["PUT", "PATCH", "DELETE"]:
             return [IsLibrarianOrAdmin()]
-        return []  # Allows unauthenticated users to view book details
+        return []
+
+    def update(self, request, *args, **kwargs):
+        book = self.get_object()
+        if "pdf" in request.data:
+            if not request.data["pdf"]:  # User wants to remove PDF
+                if book.pdf:
+                    book.pdf.delete(save=False)  # Delete the file
+                book.pdf = None
+
+        return super().update(request, *args, **kwargs)
 
 
 class BorrowBookView(APIView):

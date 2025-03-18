@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
-  const { logoutUser } = useAuth();
+  const { user, logoutUser } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -24,26 +24,43 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
 
       {/* Sidebar Links */}
       <ul className="mt-4">
+        {/* Profile Link */}
         <li
           onClick={() => {
-            router.push("/user/profile"); // Navigate to the profile page
-            toggleSidebar(); // Close sidebar after clicking
+            router.push("/user/profile");
+            toggleSidebar();
           }}
           className="p-4 hover:bg-gray-700 cursor-pointer"
         >
           Profile
         </li>
 
-        <li
-          onClick={() => {
-            router.push("/user/borrowed-books"); // Navigate to the borrowed books page
-            toggleSidebar(); // Close sidebar after clicking
-          }}
-          className="p-4 hover:bg-gray-700 cursor-pointer"
-        >
-          Borrowed Books
-        </li>
+        {/* Conditional Menu Options */}
+        {user?.is_librarian ? (
+          // Show Manage Books for Librarians
+          <li
+            onClick={() => {
+              router.push("/user/manage-books");
+              toggleSidebar();
+            }}
+            className="p-4 hover:bg-gray-700 cursor-pointer"
+          >
+            Manage Books
+          </li>
+        ) : (
+          // Show Borrowed Books for Normal Users
+          <li
+            onClick={() => {
+              router.push("/user/borrowed-books");
+              toggleSidebar();
+            }}
+            className="p-4 hover:bg-gray-700 cursor-pointer"
+          >
+            Borrowed Books
+          </li>
+        )}
 
+        {/* Logout Option */}
         <li
           onClick={handleLogout}
           className="p-4 hover:bg-gray-700 cursor-pointer"
