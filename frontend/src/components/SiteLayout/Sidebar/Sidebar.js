@@ -1,70 +1,29 @@
-import { useAuth } from "@/context/AuthContext";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+"use client";
 
-export default function Sidebar({ isOpen, toggleSidebar }) {
-  const { user, logoutUser } = useAuth();
-  const router = useRouter();
+import { LayoutDashboard, BookOpen, Layers, LogOut } from "lucide-react";
 
-  const handleLogout = () => {
-    logoutUser(); // Logout user using the context
-    toggleSidebar(); // Close sidebar after logging out
-  };
-
+export default function Sidebar({ isOpen }) {
   return (
     <div
-      className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transform ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      } transition-transform duration-300 ease-in-out z-50 shadow-lg`}
+      className={`fixed top-0 left-0 h-full w-64 bg-[var(--bg-light)] border-r border-[var(--border-color)] shadow-lg transition-all duration-300 ${
+        isOpen ? "translate-x-0" : "-translate-x-64"
+      }`}
     >
-      {/* Close Button */}
-      <button onClick={toggleSidebar} className="p-4 text-right text-white">
-        ✕
-      </button>
-
-      {/* Sidebar Links */}
-      <ul className="mt-4">
-        {/* Profile Link */}
-        <li
-          onClick={() => {
-            router.push("/user/profile");
-            toggleSidebar();
-          }}
-          className="p-4 hover:bg-gray-700 cursor-pointer"
-        >
-          Profile
+      <ul className="text-[var(--text-black)] p-6 space-y-2">
+        <li className="flex items-center gap-3 p-3 hover:bg-[var(--primary-color)] hover:text-white cursor-pointer rounded-md">
+          <LayoutDashboard className="w-5 h-5" />
+          Dashboard
         </li>
-
-        {/* Conditional Menu Options */}
-        {user?.is_librarian ? (
-          // Show Manage Books for Librarians
-          <li
-            onClick={() => {
-              router.push("/user/manage-books");
-              toggleSidebar();
-            }}
-            className="p-4 hover:bg-gray-700 cursor-pointer"
-          >
-            Manage Books
-          </li>
-        ) : (
-          // Show Borrowed Books for Normal Users
-          <li
-            onClick={() => {
-              router.push("/user/borrowed-books");
-              toggleSidebar();
-            }}
-            className="p-4 hover:bg-gray-700 cursor-pointer"
-          >
-            Borrowed Books
-          </li>
-        )}
-
-        {/* Logout Option */}
-        <li
-          onClick={handleLogout}
-          className="p-4 hover:bg-gray-700 cursor-pointer"
-        >
+        <li className="flex items-center gap-3 p-3 hover:bg-[var(--primary-color)] hover:text-white cursor-pointer rounded-md">
+          <BookOpen className="w-5 h-5" />
+          Borrowed Books
+        </li>
+        <li className="flex items-center gap-3 p-3 hover:bg-[var(--primary-color)] hover:text-white cursor-pointer rounded-md">
+          <Layers className="w-5 h-5" />
+          Manage Books
+        </li>
+        <li className="flex items-center gap-3 p-3 hover:bg-red-600 hover:text-white cursor-pointer rounded-md">
+          <LogOut className="w-5 h-5" />
           Logout
         </li>
       </ul>

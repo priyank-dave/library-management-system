@@ -14,13 +14,19 @@ export default function LayoutWrapper({ children }) {
   };
 
   return (
-    <div className="flex">
-      {/* Show Sidebar only when user is authenticated */}
-      {user && <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />}
+    <div className="flex h-screen">
+      {/* Sidebar should always be in layout */}
+      {user && <Sidebar isOpen={isSidebarOpen} />}
 
-      <div className="flex-1">
-        <Navbar toggleSidebar={user ? toggleSidebar : null} />
-        <main>{children}</main>
+      {/* Main Content Wrapper */}
+
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          isSidebarOpen ? "ml-64" : "ml-0"
+        }`}
+      >
+        <Navbar toggleSidebar={toggleSidebar} />
+        <main className="p-6">{children}</main>
       </div>
     </div>
   );
