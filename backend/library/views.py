@@ -9,7 +9,8 @@ from .models import Book
 from .serializers import BookSerializer, UserSerializer, LoginSerializer
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.core.files.storage import default_storage
-
+from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -175,10 +176,16 @@ class BorrowBookView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            # Set the book's borrowed_by field to the current user
             book.borrowed_by = request.user
+
+            # Set the due_date to 7 days from the current date
+            book.due_date = timezone.now() + timedelta(days=7)
             book.save()
+
             return Response(
-                {"message": "Book borrowed successfully"}, status=status.HTTP_200_OK
+                {"message": "Book borrowed successfully", "due_date": book.due_date},
+                status=status.HTTP_200_OK,
             )
         except Book.DoesNotExist:
             return Response(

@@ -15,6 +15,11 @@ export default function BookDetailPage() {
   const { user } = useAuth();
   const [borrowedBooks, setBorrowedBooks] = useState(new Set());
   const [borrowedBooksByOthers, setBorrowedBooksByOthers] = useState(new Set());
+  const formatDate = (dateString) => {
+    if (!dateString) return "Unknown";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB"); // Format: DD-MM-YYYY
+  };
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -77,7 +82,7 @@ export default function BookDetailPage() {
 
     try {
       const accessToken = localStorage.getItem("access_token");
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE_URL}/api/books/${isbn}/${action}/`,
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -99,6 +104,8 @@ export default function BookDetailPage() {
 
   const isBorrowed = borrowedBooks.has(book.isbn);
   const isBorrowedByOther = borrowedBooksByOthers.has(book.isbn);
+
+  const dueDate = isBorrowed && book.due_date ? new Date(book.due_date) : null;
 
   return (
     <div className="container mx-auto px-6 py-10 flex flex-col md:flex-row gap-6 md:gap-2 items-center">
@@ -163,6 +170,13 @@ export default function BookDetailPage() {
         {isBorrowedByOther && (
           <p className="mt-4 text-red-500 text-sm font-semibold">
             This book is currently borrowed by another user.
+          </p>
+        )}
+
+        {/* Due Date */}
+        {isBorrowed && dueDate && (
+          <p className="m-4 inline-block bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-lg border border-yellow-300 shadow-sm">
+            📅 Due Date: {formatDate(book.due_date)}
           </p>
         )}
       </div>

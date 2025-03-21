@@ -10,8 +10,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const BookList = ({ books }) => {
   const [filteredBooks, setFilteredBooks] = useState(books);
   const { user } = useAuth();
-  const [borrowedBooks, setBorrowedBooks] = useState(new Set());
-  const [borrowedBooksByOthers, setBorrowedBooksByOthers] = useState(new Set());
+  const [borrowedBooks, setBorrowedBooks] = useState({});
+  const [borrowedBooksByOthers, setBorrowedBooksByOthers] = useState({});
 
   useEffect(() => {
     if (user) {
@@ -26,24 +26,19 @@ const BookList = ({ books }) => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      // Create a Set of borrowed book ISBNs by the current user
-      const borrowedSet = new Set(
-        response.data
-          .filter((book) => book.borrowed_by === user?.email) // Books borrowed by the current user
-          .map((book) => book.isbn)
-      );
+      const userBorrowed = {};
+      const othersBorrowed = {};
 
-      // Create a Set of borrowed book ISBNs by other users
-      const borrowedByOthersSet = new Set(
-        response.data
-          .filter(
-            (book) => book.borrowed_by && book.borrowed_by !== user?.email
-          ) // Books borrowed by others
-          .map((book) => book.isbn)
-      );
+      response.data.forEach((book) => {
+        if (book.borrowed_by === user?.email) {
+          userBorrowed[book.isbn] = book.due_date || "Unknown";
+        } else if (book.borrowed_by) {
+          othersBorrowed[book.isbn] = true;
+        }
+      });
 
-      setBorrowedBooks(borrowedSet);
-      setBorrowedBooksByOthers(borrowedByOthersSet);
+      setBorrowedBooks(userBorrowed);
+      setBorrowedBooksByOthers(othersBorrowed);
     } catch (error) {
       console.error("Error fetching books:", error);
     }
@@ -71,16 +66,25 @@ const BookList = ({ books }) => {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === "Unknown") return "Unknown";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB"); // "DD-MM-YYYY" format
+  };
+
+  const isOverdue = (dueDate) => {
+    if (!dueDate || dueDate === "Unknown") return false;
+    return new Date(dueDate) < new Date();
+  };
+
   return (
     <div className="max-w-screen-xl mx-auto py-12 px-4">
       <h2 className="text-3xl font-bold text-[var(--text-black)] mb-6">
         Explore Our Collection
       </h2>
 
-      {/* Search Bar */}
       <SearchBar books={books} onSearchResults={setFilteredBooks} />
 
-      {/* Book Grid */}
       {filteredBooks.length === 0 ? (
         <p className="text-[var(--secondary-color)] text-lg text-center mt-4">
           No books found.
@@ -88,8 +92,12 @@ const BookList = ({ books }) => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mt-6">
           {filteredBooks.map((book) => {
-            const isBorrowed = borrowedBooks.has(book.isbn);
-            const isBorrowedByOther = borrowedBooksByOthers.has(book.isbn);
+            const isBorrowed = borrowedBooks.hasOwnProperty(book.isbn);
+            const isBorrowedByOther = borrowedBooksByOthers.hasOwnProperty(
+              book.isbn
+            );
+            const dueDate = borrowedBooks[book.isbn] || null;
+            const overdue = isOverdue(dueDate);
 
             return (
               <div
@@ -97,7 +105,6 @@ const BookList = ({ books }) => {
                 className="relative group flex flex-col items-center w-48 bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-visible cursor-pointer"
               >
                 <Link href={`/books/${book.isbn}`} passHref className="w-full">
-                  {/* Tooltip Wrapper */}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[var(--primary-color)] text-white text-sm p-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-60 z-50 pointer-events-none">
                     <h3 className="font-semibold">{book.title}</h3>
                     <p>by {book.author || "Unknown Author"}</p>
@@ -109,7 +116,6 @@ const BookList = ({ books }) => {
                     )}
                   </div>
 
-                  {/* Book Image */}
                   <div className="relative w-full h-72 flex justify-center items-center overflow-hidden rounded-t-lg bg-gray-100">
                     <Image
                       src={book.image || "/default-book.jpg"}
@@ -121,8 +127,7 @@ const BookList = ({ books }) => {
                     />
                   </div>
 
-                  {/* Book Details */}
-                  <div className="w-full text-center px-3 py-3">
+                  <div className="w-full text-center px-3 py-3 flex flex-col">
                     <h3 className="text-lg font-semibold text-[var(--card-title)]">
                       {book.title}
                     </h3>
@@ -130,44 +135,61 @@ const BookList = ({ books }) => {
                       {book.author || "Unknown Author"}
                     </p>
 
-                    {/* Show Borrowed Status (Only When Logged In) */}
                     {user && (
-                      <p className="text-xs font-semibold mt-1 text-gray-600">
-                        {isBorrowed
-                          ? "📖 Borrowed"
-                          : isBorrowedByOther
-                          ? "📖 Borrowed by another user"
-                          : "Available"}
+                      <>
+                        {/* Fixed Height for Status Message */}
+                        <p
+                          className={`text-xs font-semibold mt-1 min-h-[50px] flex items-center justify-center ${
+                            isBorrowed
+                              ? overdue
+                                ? "text-red-600"
+                                : "text-gray-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {isBorrowed
+                            ? `📖 Borrowed (Due: ${formatDate(dueDate)})`
+                            : isBorrowedByOther
+                            ? "📖 Borrowed by another user"
+                            : "Available"}
+                        </p>
+
+                        {overdue && isBorrowed && (
+                          <p className="text-xs font-bold text-red-500">
+                            ⚠ Overdue! Return ASAP.
+                          </p>
+                        )}
+                      </>
+                    )}
+
+                    {/* Button Container with mt-auto for Alignment Fix */}
+                    <div className="mt-auto">
+                      {user && !isBorrowedByOther && (
+                        <button
+                          className={`mt-1 mb-3 px-4 py-2 text-white text-sm font-semibold rounded-md ${
+                            isBorrowed
+                              ? "bg-red-500 hover:bg-red-600"
+                              : "bg-green-500 hover:bg-green-600"
+                          } transition`}
+                          onClick={() =>
+                            handleBorrowReturn(
+                              book.isbn,
+                              isBorrowed ? "return" : "borrow"
+                            )
+                          }
+                        >
+                          {isBorrowed ? "Return Book" : "Borrow Book"}
+                        </button>
+                      )}
+                    </div>
+
+                    {isBorrowedByOther && (
+                      <p className="mt-1 text-red-500 text-sm font-semibold">
+                        This book is currently borrowed by another user.
                       </p>
                     )}
                   </div>
                 </Link>
-
-                {/* Borrow/Return Button (Only for Logged-In Users) */}
-                {user && !isBorrowedByOther && (
-                  <button
-                    className={`mt-2 mb-3 px-4 py-2 text-white text-sm font-semibold rounded-md ${
-                      isBorrowed
-                        ? "bg-red-500 hover:bg-red-600"
-                        : "bg-green-500 hover:bg-green-600"
-                    } transition`}
-                    onClick={() =>
-                      handleBorrowReturn(
-                        book.isbn,
-                        isBorrowed ? "return" : "borrow"
-                      )
-                    }
-                  >
-                    {isBorrowed ? "Return Book" : "Borrow Book"}
-                  </button>
-                )}
-
-                {/* Display Message if Borrowed by Another User */}
-                {isBorrowedByOther && (
-                  <p className="mt-2 text-red-500 text-sm font-semibold">
-                    This book is currently borrowed by another user.
-                  </p>
-                )}
               </div>
             );
           })}

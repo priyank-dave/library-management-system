@@ -91,6 +91,7 @@ class BookSerializer(serializers.ModelSerializer):
             "pdf",
             "borrowed_by",
             "is_borrowed",
+            "due_date",
         ]
 
     def get_borrowed_by(self, obj):

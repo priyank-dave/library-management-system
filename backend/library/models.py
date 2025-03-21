@@ -65,6 +65,7 @@ class Book(models.Model):
         blank=True,
         related_name="borrowed_books",
     )
+    due_date = models.DateTimeField(null=True, blank=True)  # Add due date field
 
     def __str__(self):
         return self.title

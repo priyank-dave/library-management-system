@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/SiteLayout/Sidebar/Sidebar";
 import Navbar from "@/components/SiteLayout/Navbar/Navbar";
 import { useAuth } from "@/context/AuthContext";
@@ -10,23 +10,29 @@ export default function LayoutWrapper({ children }) {
   const { user } = useAuth(); // Get authenticated user
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen((prev) => !prev);
   };
+
+  // Close sidebar when user logs out
+  useEffect(() => {
+    if (!user) {
+      setIsSidebarOpen(false);
+    }
+  }, [user]);
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar should always be in layout */}
+      {/* Show Sidebar only when user is logged in */}
       {user && <Sidebar isOpen={isSidebarOpen} />}
 
-      {/* Main Content Wrapper */}
-
+      {/* Main Content */}
       <div
         className={`flex-1 transition-all duration-300 ${
-          isSidebarOpen ? "ml-64" : "ml-0"
+          user && isSidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
         <Navbar toggleSidebar={toggleSidebar} />
-        <main className="p-6">{children}</main>
+        <main>{children}</main>
       </div>
     </div>
   );
