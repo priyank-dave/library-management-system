@@ -30,10 +30,10 @@ const BookList = ({ books }) => {
       const othersBorrowed = {};
 
       response.data.forEach((book) => {
-        if (book.borrowed_by === user?.email) {
+        if (book.borrowed_by_email === user?.email) {
           userBorrowed[book.isbn] = book.due_date || "Unknown";
-        } else if (book.borrowed_by) {
-          othersBorrowed[book.isbn] = true;
+        } else if (book.borrowed_by_email) {
+          othersBorrowed[book.isbn] = book.borrowed_by_name || "Unknown User";
         }
       });
 
@@ -69,7 +69,7 @@ const BookList = ({ books }) => {
   const formatDate = (dateString) => {
     if (!dateString || dateString === "Unknown") return "Unknown";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB"); // "DD-MM-YYYY" format
+    return date.toLocaleDateString("en-GB");
   };
 
   const isOverdue = (dueDate) => {
@@ -93,9 +93,7 @@ const BookList = ({ books }) => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mt-6">
           {filteredBooks.map((book) => {
             const isBorrowed = borrowedBooks.hasOwnProperty(book.isbn);
-            const isBorrowedByOther = borrowedBooksByOthers.hasOwnProperty(
-              book.isbn
-            );
+            const borrowedByOther = borrowedBooksByOthers[book.isbn];
             const dueDate = borrowedBooks[book.isbn] || null;
             const overdue = isOverdue(dueDate);
 
@@ -135,11 +133,20 @@ const BookList = ({ books }) => {
                       {book.author || "Unknown Author"}
                     </p>
 
+                    {/* Category Badge */}
+                    {book.category_name && (
+                      <p className="mt-1">
+                        <span className="inline-block bg-[var(--primary-color)] text-white text-xs font-semibold px-3 py-1 rounded-full">
+                          {book.category_name}
+                        </span>
+                      </p>
+                    )}
+
                     {user && (
                       <>
-                        {/* Fixed Height for Status Message */}
+                        {/* Status Message */}
                         <p
-                          className={`text-xs font-semibold mt-1 min-h-[50px] flex items-center justify-center ${
+                          className={`text-xs font-semibold mt-1 min-h-[30px] flex items-center justify-center ${
                             isBorrowed
                               ? overdue
                                 ? "text-red-600"
@@ -149,8 +156,8 @@ const BookList = ({ books }) => {
                         >
                           {isBorrowed
                             ? `📖 Borrowed (Due: ${formatDate(dueDate)})`
-                            : isBorrowedByOther
-                            ? "📖 Borrowed by another user"
+                            : borrowedByOther
+                            ? `📖 Borrowed by ${borrowedByOther}`
                             : "Available"}
                         </p>
 
@@ -162,9 +169,9 @@ const BookList = ({ books }) => {
                       </>
                     )}
 
-                    {/* Button Container with mt-auto for Alignment Fix */}
+                    {/* Borrow/Return Button */}
                     <div className="mt-auto">
-                      {user && !isBorrowedByOther && (
+                      {user && !borrowedByOther && (
                         <button
                           className={`mt-1 mb-3 px-4 py-2 text-white text-sm font-semibold rounded-md ${
                             isBorrowed
@@ -183,9 +190,9 @@ const BookList = ({ books }) => {
                       )}
                     </div>
 
-                    {isBorrowedByOther && (
+                    {borrowedByOther && (
                       <p className="mt-1 text-red-500 text-sm font-semibold">
-                        This book is currently borrowed by another user.
+                        Borrowed by {borrowedByOther}
                       </p>
                     )}
                   </div>

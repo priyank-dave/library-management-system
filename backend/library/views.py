@@ -5,8 +5,13 @@ from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .models import Book
-from .serializers import BookSerializer, UserSerializer, LoginSerializer
+from .models import Book, Category
+from .serializers import (
+    BookSerializer,
+    UserSerializer,
+    LoginSerializer,
+    CategorySerializer,
+)
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.core.files.storage import default_storage
 from django.utils import timezone
@@ -61,11 +66,19 @@ class RegisterView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
+class UserLoginView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
+
+            # Ensure only regular users can log in here
+            if user.is_staff or user.is_librarian:
+                return Response(
+                    {"error": "Admins/Librarians must log in via /admin/login"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
             refresh = RefreshToken.for_user(user)
             return Response(
                 {
@@ -73,6 +86,29 @@ class LoginView(APIView):
                     "access": str(refresh.access_token),
                 }
             )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminLoginView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data
+
+            if not (user.is_staff or user.is_librarian):
+                return Response(
+                    {"error": "Only admins/librarians can log in here"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            refresh = RefreshToken.for_user(user)
+            return Response(
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                }
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -214,3 +250,23 @@ class ReturnBookView(APIView):
             return Response(
                 {"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+
+class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+
+class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]

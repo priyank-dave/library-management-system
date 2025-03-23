@@ -22,7 +22,7 @@ const RoleSelection = () => {
           <p className="text-gray-600 text-center mt-2">
             Manage books, users, and the library system.
           </p>
-          <Link href="/admin/login">
+          <Link href="/login/admin">
             <button className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
               Login as Librarian
             </button>
@@ -41,7 +41,7 @@ const RoleSelection = () => {
           <p className="text-gray-600 text-center mt-2">
             Borrow books and explore library resources.
           </p>
-          <Link href="/user/login">
+          <Link href="/login/user">
             <button className="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
               Login as User
             </button>

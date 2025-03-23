@@ -49,6 +49,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Book(models.Model):
     isbn = models.CharField(
         max_length=13, unique=True, null=False, blank=False, primary_key=True
@@ -65,7 +72,9 @@ class Book(models.Model):
         blank=True,
         related_name="borrowed_books",
     )
-    due_date = models.DateTimeField(null=True, blank=True)  # Add due date field
+    due_date = models.DateTimeField(null=True, blank=True)
+
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title

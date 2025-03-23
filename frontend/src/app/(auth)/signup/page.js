@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "@/context/AuthContext"; // Import AuthContext
 
 const Signup = () => {
+  const { registerUser, loginWithGoogle } = useAuth(); // Use AuthContext
   const router = useRouter();
   const [form, setForm] = useState({
     firstName: "",
@@ -31,28 +32,15 @@ const Signup = () => {
     setError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: form.firstName,
-          last_name: form.lastName,
-          email: form.email,
-          password: form.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Signup failed");
-      }
-
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
+      await registerUser(
+        form.firstName,
+        form.lastName,
+        form.email,
+        form.password
+      ); // Use context function
       router.push("/"); // Redirect after signup
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Signup failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -61,16 +49,7 @@ const Signup = () => {
   // Handle Google Signup Success
   const handleGoogleSuccess = async (response) => {
     try {
-      const token = response.credential;
-      const res = await axios.post("http://127.0.0.1:8000/api/auth/google/", {
-        token,
-      });
-
-      // Store JWT tokens
-      localStorage.setItem("access_token", res.data.access_token);
-      localStorage.setItem("refresh_token", res.data.refresh_token);
-
-      console.log("User authenticated:", res.data.user);
+      await loginWithGoogle(response.credential); // Use context function
       router.push("/"); // Redirect after Google signup
     } catch (error) {
       setError("Google signup failed. Try again.");
@@ -108,7 +87,7 @@ const Signup = () => {
                 value={form.firstName}
                 onChange={handleChange}
                 required
-                className="w-1/2 px-4 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+                className="w-1/2 px-4 py-2 border border-[var(--border-color)] rounded-lg"
               />
               <input
                 type="text"
@@ -117,7 +96,7 @@ const Signup = () => {
                 value={form.lastName}
                 onChange={handleChange}
                 required
-                className="w-1/2 px-4 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+                className="w-1/2 px-4 py-2 border border-[var(--border-color)] rounded-lg"
               />
             </div>
 
@@ -128,7 +107,7 @@ const Signup = () => {
               value={form.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+              className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg"
             />
 
             <input
@@ -138,7 +117,7 @@ const Signup = () => {
               value={form.password}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+              className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg"
             />
 
             <button
@@ -149,27 +128,6 @@ const Signup = () => {
               {loading ? "Signing Up..." : "Sign Up"}
             </button>
           </form>
-
-          {/* Google Signup */}
-          <div className="mt-4 w-full max-w-md">
-            <div className="flex justify-center mt-2">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setError("Google Login Failed")}
-              />
-            </div>
-          </div>
-
-          {/* Already have an account? */}
-          <p className="mt-4 text-[var(--secondary-color)]">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-[var(--primary-color)] font-medium"
-            >
-              Login
-            </Link>
-          </p>
         </div>
       </div>
     </GoogleOAuthProvider>

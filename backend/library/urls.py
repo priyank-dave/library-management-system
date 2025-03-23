@@ -2,18 +2,22 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from django.urls import path
 from .views import (
     RegisterView,
-    LoginView,
+    UserLoginView,
+    AdminLoginView,
     BookListCreateView,
     BookDetailView,
     GoogleLoginView,
     UserDetailView,
     BorrowBookView,
     ReturnBookView,
+    CategoryListCreateView,
+    CategoryDetailView,
 )
 
 urlpatterns = [
-    path("register/", RegisterView.as_view(), name="register"),
-    path("login/", LoginView.as_view(), name="login"),
+    path("register/user/", RegisterView.as_view(), name="user-register"),
+    path("login/user/", UserLoginView.as_view(), name="user-login"),
+    path("login/admin/", AdminLoginView.as_view(), name="admin-login"),
     path("books/", BookListCreateView.as_view(), name="book-list"),
     path("books/<str:isbn>/", BookDetailView.as_view(), name="book-detail"),
     path("auth/google/", GoogleLoginView.as_view(), name="google-login"),
@@ -21,4 +25,6 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("books/<str:isbn>/borrow/", BorrowBookView.as_view(), name="borrow-book"),
     path("books/<str:isbn>/return/", ReturnBookView.as_view(), name="return-book"),
+    path("categories/", CategoryListCreateView.as_view(), name="category-list"),
+    path("categories/<int:pk>/", CategoryDetailView.as_view(), name="category-detail"),
 ]

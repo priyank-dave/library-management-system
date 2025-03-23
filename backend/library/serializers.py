@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, Book
+from .models import User, Book, Category
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture = serializers.ImageField(required=False)  # Ensure it's optional
+    profile_picture = serializers.ImageField(required=False)
 
     class Meta:
         model = User
@@ -79,6 +79,10 @@ class LoginSerializer(serializers.Serializer):
 class BookSerializer(serializers.ModelSerializer):
     borrowed_by = serializers.SerializerMethodField()
     is_borrowed = serializers.SerializerMethodField()
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), write_only=True
+    )
 
     class Meta:
         model = Book
@@ -91,6 +95,8 @@ class BookSerializer(serializers.ModelSerializer):
             "pdf",
             "borrowed_by",
             "is_borrowed",
+            "category",
+            "category_name",
             "due_date",
         ]
 
@@ -103,8 +109,8 @@ class BookSerializer(serializers.ModelSerializer):
     def get_is_borrowed(self, obj):
         return bool(obj.borrowed_by)
 
-    def update(self, instance, validated_data):
-        if "pdf" in validated_data:
-            if instance.pdf:
-                instance.pdf.delete(save=False)
-        return super().update(instance, validated_data)
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ["id", "name"]

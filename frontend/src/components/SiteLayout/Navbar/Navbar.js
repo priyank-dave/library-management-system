@@ -52,7 +52,7 @@ const Navbar = ({ toggleSidebar }) => {
           </div>
 
           {/* Right: Auth & Profile Section */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 text-black">
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -71,6 +71,7 @@ const Navbar = ({ toggleSidebar }) => {
                   <ChevronDown className="w-5 h-5" />
                 </button>
 
+                {/* Dropdown Menu */}
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
                     <button
