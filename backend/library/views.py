@@ -244,7 +244,19 @@ class ReturnBookView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            # Calculate overdue fee
+            overdue_fee = book.calculate_overdue_fee()
+            if overdue_fee > 0:
+                return Response(
+                    {
+                        "error": f"You must pay an overdue fee of ${overdue_fee:.2f} before returning the book."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Mark book as returned
             book.borrowed_by = None
+            book.due_date = None
             book.save()
 
             # Create a notification for the user
@@ -307,4 +319,48 @@ class MarkNotificationAsReadView(APIView):
         except Notification.DoesNotExist:
             return Response(
                 {"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PayFeeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        isbn = request.data.get("isbn")
+        amount = request.data.get("amount")
+
+        if not isbn or amount is None:
+            return Response(
+                {"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            book = Book.objects.get(isbn=isbn, borrowed_by=request.user)
+
+            overdue_fee = book.calculate_overdue_fee()
+
+            if overdue_fee > 0 and (amount is None or amount < overdue_fee):
+                return Response(
+                    {"error": f"Full payment required: ${overdue_fee:.2f}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Mark fee as paid (Implement actual payment gateway logic)
+            book.due_date = None  # Reset due date
+            book.borrowed_by = None
+            book.save()
+
+            Notification.objects.create(
+                user=request.user,
+                message=f"Overdue fee of ${amount:.2f} paid for '{book.title}'.",
+            )
+
+            return Response(
+                {"message": "Payment successful"}, status=status.HTTP_200_OK
+            )
+
+        except Book.DoesNotExist:
+            return Response(
+                {"error": "Book not found or not borrowed by this user"},
+                status=status.HTTP_404_NOT_FOUND,
             )

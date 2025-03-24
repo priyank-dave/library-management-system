@@ -5,6 +5,7 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils.timezone import now
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -57,9 +58,7 @@ class Category(models.Model):
 
 
 class Book(models.Model):
-    isbn = models.CharField(
-        max_length=13, unique=True, null=False, blank=False, primary_key=True
-    )
+    isbn = models.CharField(max_length=13, unique=True, primary_key=True)
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     published_date = models.DateField()
@@ -73,8 +72,17 @@ class Book(models.Model):
         related_name="borrowed_books",
     )
     due_date = models.DateTimeField(null=True, blank=True)
-
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    fine_per_day = models.DecimalField(
+        max_digits=6, decimal_places=2, default=5.00
+    )  # Default fine per day
+
+    def calculate_overdue_fee(self):
+        """Calculate overdue fee based on days past due date."""
+        if self.due_date and self.borrowed_by:
+            overdue_days = (timezone.now() - self.due_date).days
+            return max(overdue_days * self.fine_per_day, 0) if overdue_days > 0 else 0
+        return 0
 
     def __str__(self):
         return self.title

@@ -14,6 +14,7 @@ from .views import (
     CategoryDetailView,
     NotificationListView,
     MarkNotificationAsReadView,
+    PayFeeView,
 )
 
 urlpatterns = [
@@ -35,4 +36,5 @@ urlpatterns = [
         MarkNotificationAsReadView.as_view(),
         name="mark-notification-read",
     ),
+    path("pay-fee/", PayFeeView.as_view(), name="pay-fee"),
 ]

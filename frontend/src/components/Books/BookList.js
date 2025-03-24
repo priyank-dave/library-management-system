@@ -31,7 +31,10 @@ const BookList = ({ books }) => {
 
       response.data.forEach((book) => {
         if (book.borrowed_by === user?.email) {
-          userBorrowed[book.isbn] = book.due_date || "Unknown";
+          userBorrowed[book.isbn] = {
+            due_date: book.due_date || "Unknown",
+            fee: book.overdue_fee || 0, // Ensure overdue_fee is captured
+          };
         } else if (book.is_borrowed && book.borrowed_by) {
           othersBorrowed[book.isbn] = book.borrowed_by || "Unknown User";
         }
@@ -54,6 +57,23 @@ const BookList = ({ books }) => {
 
     try {
       const accessToken = localStorage.getItem("access_token");
+
+      if (action === "return" && borrowedBooks[isbn]?.fee > 0) {
+        const payConfirm = window.confirm(
+          `You have an overdue fee of $${borrowedBooks[isbn].fee}. Pay now?`
+        );
+        if (!payConfirm) return;
+
+        await axios.post(
+          `${API_BASE_URL}/api/pay-fee/`,
+          {
+            isbn,
+            amount: borrowedBooks[isbn].fee, // Add amount in payload
+          },
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+      }
+
       await axios.post(
         `${API_BASE_URL}/api/books/${isbn}/${action}/`,
         {},
@@ -64,7 +84,6 @@ const BookList = ({ books }) => {
 
       if (window.refreshNotifications) {
         console.log("Notif");
-
         window.refreshNotifications();
       }
     } catch (error) {
@@ -100,8 +119,9 @@ const BookList = ({ books }) => {
           {filteredBooks.map((book) => {
             const isBorrowed = borrowedBooks.hasOwnProperty(book.isbn);
             const borrowedByOther = borrowedBooksByOthers[book.isbn];
-            const dueDate = borrowedBooks[book.isbn] || null;
+            const dueDate = borrowedBooks[book.isbn]?.due_date || null;
             const overdue = isOverdue(dueDate);
+            const fee = borrowedBooks[book.isbn]?.fee || 0;
 
             return (
               <div
@@ -139,7 +159,6 @@ const BookList = ({ books }) => {
                       {book.author || "Unknown Author"}
                     </p>
 
-                    {/* Category Badge */}
                     {book.category_name && (
                       <p className="mt-1">
                         <span className="inline-block bg-[var(--primary-color)] text-white text-xs font-semibold px-3 py-1 rounded-full">
@@ -150,7 +169,6 @@ const BookList = ({ books }) => {
 
                     {user && (
                       <>
-                        {/* Status Message */}
                         <p
                           className={`text-xs font-semibold mt-1 min-h-[30px] flex items-center justify-center ${
                             isBorrowed
@@ -175,18 +193,19 @@ const BookList = ({ books }) => {
                       </>
                     )}
 
-                    {/* Borrow/Return Button */}
                     <div className="mt-auto">
                       {user && !borrowedByOther && (
                         <button
                           className={`mt-1 mb-3 px-4 py-2 text-white text-sm font-semibold rounded-md ${
                             isBorrowed
-                              ? "bg-red-500 hover:bg-red-600"
+                              ? fee > 0
+                                ? "bg-orange-500 hover:bg-orange-600"
+                                : "bg-red-500 hover:bg-red-600"
                               : "bg-green-500 hover:bg-green-600"
                           } transition`}
                           onClick={(e) => {
-                            e.stopPropagation(); // 🚀 Fix: Prevents <Link> from being triggered
-                            e.preventDefault(); // Stops the default navigation behavior
+                            e.stopPropagation();
+                            e.preventDefault();
                             handleBorrowReturn(
                               book.isbn,
                               isBorrowed ? "return" : "borrow"
@@ -194,17 +213,14 @@ const BookList = ({ books }) => {
                           }}
                           disabled={borrowedByOther}
                         >
-                          {isBorrowed ? "Return Book" : "Borrow Book"}
+                          {isBorrowed
+                            ? fee > 0
+                              ? "Pay & Return"
+                              : "Return Book"
+                            : "Borrow Book"}
                         </button>
                       )}
                     </div>
-
-                    {/* Remove duplicate borrowed message */}
-                    {borrowedByOther && (
-                      <p className="mt-1 text-red-500 text-sm font-semibold">
-                        Already borrowed by another user
-                      </p>
-                    )}
                   </div>
                 </Link>
               </div>

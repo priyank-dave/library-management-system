@@ -83,6 +83,7 @@ class BookSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), write_only=True
     )
+    overdue_fee = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -98,6 +99,8 @@ class BookSerializer(serializers.ModelSerializer):
             "category",
             "category_name",
             "due_date",
+            "fine_per_day",
+            "overdue_fee",
         ]
 
     def get_borrowed_by(self, obj):
@@ -108,6 +111,9 @@ class BookSerializer(serializers.ModelSerializer):
 
     def get_is_borrowed(self, obj):
         return bool(obj.borrowed_by)
+
+    def get_overdue_fee(self, obj):
+        return obj.calculate_overdue_fee()
 
 
 class CategorySerializer(serializers.ModelSerializer):
