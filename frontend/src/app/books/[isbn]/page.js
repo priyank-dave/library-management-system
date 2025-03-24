@@ -50,12 +50,16 @@ export default function BookDetailPage() {
       const othersBorrowed = {};
 
       response.data.forEach((book) => {
-        if (book.borrowed_by_email === user?.email) {
-          userBorrowed[book.isbn] = book.due_date || "Unknown";
-        } else if (book.borrowed_by_email) {
-          othersBorrowed[book.isbn] = book.borrowed_by_name || "Unknown User";
+        if (book.borrowed_by === user?.email) {
+          userBorrowed[String(book.isbn)] = book.due_date || "Unknown";
+        } else if (book.borrowed_by) {
+          othersBorrowed[String(book.isbn)] =
+            book.borrowed_by || "Unknown User";
         }
       });
+
+      console.log("User Borrowed Books:", userBorrowed);
+      console.log("Borrowed by Others:", othersBorrowed);
 
       setBorrowedBooks(userBorrowed);
       setBorrowedBooksByOthers(othersBorrowed);

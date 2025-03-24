@@ -14,7 +14,7 @@ const SearchBar = ({ books, onSearchResults }) => {
       }
 
       const fuse = new Fuse(books, {
-        keys: ["title", "author"],
+        keys: ["title", "author", "category_name"],
         threshold: 0.3,
       });
 

@@ -5,12 +5,13 @@ from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .models import Book, Category
+from .models import Book, Category, Notification
 from .serializers import (
     BookSerializer,
     UserSerializer,
     LoginSerializer,
     CategorySerializer,
+    NotificationSerializer,
 )
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.core.files.storage import default_storage
@@ -212,12 +213,14 @@ class BorrowBookView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Set the book's borrowed_by field to the current user
             book.borrowed_by = request.user
-
-            # Set the due_date to 7 days from the current date
             book.due_date = timezone.now() + timedelta(days=7)
             book.save()
+
+            # Create a notification for the user
+            Notification.objects.create(
+                user=request.user, message=f"You have borrowed '{book.title}'."
+            )
 
             return Response(
                 {"message": "Book borrowed successfully", "due_date": book.due_date},
@@ -243,6 +246,12 @@ class ReturnBookView(APIView):
 
             book.borrowed_by = None
             book.save()
+
+            # Create a notification for the user
+            Notification.objects.create(
+                user=request.user, message=f"You have returned '{book.title}'."
+            )
+
             return Response(
                 {"message": "Book returned successfully"}, status=status.HTTP_200_OK
             )
@@ -270,3 +279,32 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == "GET":
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
+
+
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by(
+            "-timestamp"
+        )
+
+
+class MarkNotificationAsReadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, notification_id):
+        try:
+            notification = Notification.objects.get(
+                id=notification_id, user=request.user
+            )
+            notification.is_read = True
+            notification.save()
+            return Response(
+                {"message": "Notification marked as read"}, status=status.HTTP_200_OK
+            )
+        except Notification.DoesNotExist:
+            return Response(
+                {"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND
+            )

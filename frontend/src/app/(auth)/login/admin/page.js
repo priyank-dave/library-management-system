@@ -25,7 +25,6 @@ const AdminLogin = () => {
 
     try {
       await login(form.email, form.password, true); // Pass 'true' for admin login
-      router.push("/admin/dashboard"); // Redirect to admin dashboard
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {

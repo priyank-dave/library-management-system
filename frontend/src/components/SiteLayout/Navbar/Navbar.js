@@ -7,6 +7,7 @@ import { BookOpen, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import Sidebar from "@/components/SiteLayout/Sidebar/Sidebar"; // Import Sidebar
+import NotificationDropdown from "./NotificationDropdown";
 
 const Navbar = ({ toggleSidebar }) => {
   const router = useRouter();
@@ -53,6 +54,7 @@ const Navbar = ({ toggleSidebar }) => {
 
           {/* Right: Auth & Profile Section */}
           <div className="flex items-center gap-4 text-black">
+            {user && <NotificationDropdown />} {/* Add Notification Dropdown */}
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <button

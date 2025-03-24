@@ -12,6 +12,8 @@ from .views import (
     ReturnBookView,
     CategoryListCreateView,
     CategoryDetailView,
+    NotificationListView,
+    MarkNotificationAsReadView,
 )
 
 urlpatterns = [
@@ -27,4 +29,10 @@ urlpatterns = [
     path("books/<str:isbn>/return/", ReturnBookView.as_view(), name="return-book"),
     path("categories/", CategoryListCreateView.as_view(), name="category-list"),
     path("categories/<int:pk>/", CategoryDetailView.as_view(), name="category-detail"),
+    path("notifications/", NotificationListView.as_view(), name="notifications"),
+    path(
+        "notifications/<int:notification_id>/read/",
+        MarkNotificationAsReadView.as_view(),
+        name="mark-notification-read",
+    ),
 ]

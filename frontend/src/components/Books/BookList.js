@@ -30,10 +30,10 @@ const BookList = ({ books }) => {
       const othersBorrowed = {};
 
       response.data.forEach((book) => {
-        if (book.borrowed_by_email === user?.email) {
+        if (book.borrowed_by === user?.email) {
           userBorrowed[book.isbn] = book.due_date || "Unknown";
-        } else if (book.borrowed_by_email) {
-          othersBorrowed[book.isbn] = book.borrowed_by_name || "Unknown User";
+        } else if (book.is_borrowed && book.borrowed_by) {
+          othersBorrowed[book.isbn] = book.borrowed_by || "Unknown User";
         }
       });
 
@@ -61,6 +61,12 @@ const BookList = ({ books }) => {
       );
 
       fetchBorrowedBooks();
+
+      if (window.refreshNotifications) {
+        console.log("Notif");
+
+        window.refreshNotifications();
+      }
     } catch (error) {
       console.error(`Failed to ${action} book:`, error);
     }
@@ -157,7 +163,7 @@ const BookList = ({ books }) => {
                           {isBorrowed
                             ? `📖 Borrowed (Due: ${formatDate(dueDate)})`
                             : borrowedByOther
-                            ? `📖 Borrowed by ${borrowedByOther}`
+                            ? `📖 Borrowed by another user`
                             : "Available"}
                         </p>
 
@@ -178,21 +184,25 @@ const BookList = ({ books }) => {
                               ? "bg-red-500 hover:bg-red-600"
                               : "bg-green-500 hover:bg-green-600"
                           } transition`}
-                          onClick={() =>
+                          onClick={(e) => {
+                            e.stopPropagation(); // 🚀 Fix: Prevents <Link> from being triggered
+                            e.preventDefault(); // Stops the default navigation behavior
                             handleBorrowReturn(
                               book.isbn,
                               isBorrowed ? "return" : "borrow"
-                            )
-                          }
+                            );
+                          }}
+                          disabled={borrowedByOther}
                         >
                           {isBorrowed ? "Return Book" : "Borrow Book"}
                         </button>
                       )}
                     </div>
 
+                    {/* Remove duplicate borrowed message */}
                     {borrowedByOther && (
                       <p className="mt-1 text-red-500 text-sm font-semibold">
-                        Borrowed by {borrowedByOther}
+                        Already borrowed by another user
                       </p>
                     )}
                   </div>
