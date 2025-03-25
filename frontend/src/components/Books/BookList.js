@@ -29,7 +29,7 @@ const BookList = ({ books }) => {
       const userBorrowed = {};
       const othersBorrowed = {};
 
-      response.data.forEach((book) => {
+      response.data.results.forEach((book) => {
         if (book.borrowed_by === user?.email) {
           userBorrowed[book.isbn] = {
             due_date: book.due_date || "Unknown",

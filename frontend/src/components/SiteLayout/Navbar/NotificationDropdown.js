@@ -31,7 +31,7 @@ const NotificationDropdown = () => {
 
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.slice(0, 3)); // Show top 3 notifications
+        setNotifications(data.results.slice(0, 3)); // Show top 3 notifications
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);

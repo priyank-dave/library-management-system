@@ -25,15 +25,16 @@ export default function Dashboard() {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
 
-        const totalBorrowedBooks = response.data.filter(
+        const totalBorrowedBooks = response.data.results.filter(
           (book) => book.borrowed_by
         ).length; // Books borrowed by any user
 
-        const userBorrowedBooks = response.data.filter(
+        const userBorrowedBooks = response.data.results.filter(
           (book) => book.borrowed_by === user?.email
         ).length; // Books borrowed by logged-in user
 
-        const availableBooks = response.data.length - totalBorrowedBooks; // Remaining available books
+        const availableBooks =
+          response.data.results.length - totalBorrowedBooks; // Remaining available books
 
         setStats({ totalBorrowedBooks, userBorrowedBooks, availableBooks });
       } catch (error) {

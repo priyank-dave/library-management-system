@@ -14,8 +14,11 @@ from .serializers import (
     NotificationSerializer,
 )
 from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from django.core.files.storage import default_storage
 from django.utils import timezone
+from django.db.models import Q
 from datetime import timedelta
 
 User = get_user_model()
@@ -170,16 +173,45 @@ class IsLibrarianOrAdmin(BasePermission):
 class BookListCreateView(generics.ListCreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    ordering_fields = ["published_date", "title"]
+    ordering = ["title"]
 
     def get_permissions(self):
-        if self.request.method == "POST":  # Only librarians or admins can add books
+        if self.request.method == "POST":
             return [IsLibrarianOrAdmin()]
-        return []  # Allows unauthenticated users to view books
+        return []
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context["request"] = self.request  # Pass the request for `borrowed_by` field
+        context["request"] = self.request
         return context
+
+    def get_queryset(self):
+        queryset = Book.objects.all()
+        author_query = self.request.query_params.get("author", None)
+        title_query = self.request.query_params.get("title", None)
+        category_query = self.request.query_params.get("category", None)
+        borrowed_by_query = self.request.query_params.get("borrowed_by", None)
+
+        filters = Q()
+
+        if author_query:
+            filters &= Q(author__icontains=author_query)
+
+        if title_query:
+            filters &= Q(title__icontains=title_query)
+
+        if category_query:
+            filters &= Q(category__name__icontains=category_query)
+
+        if borrowed_by_query:
+            filters &= Q(borrowed_by__email=borrowed_by_query)
+
+        if filters:
+            queryset = queryset.filter(filters)
+
+        return queryset
 
 
 class BookDetailView(generics.RetrieveUpdateDestroyAPIView):

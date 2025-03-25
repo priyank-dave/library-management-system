@@ -62,7 +62,7 @@ const EditBookPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setCategories(data);
+          setCategories(data.results);
         } else {
           console.error("Failed to fetch categories");
         }

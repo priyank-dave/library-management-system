@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
-import SearchBar from "@/components/SearchBar/SearchBar";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -11,7 +10,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const BorrowedBooks = () => {
   const { user } = useAuth();
   const [borrowedBooks, setBorrowedBooks] = useState([]);
-  const [filteredBooks, setFilteredBooks] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -22,15 +20,13 @@ const BorrowedBooks = () => {
   const fetchBorrowedBooks = async () => {
     try {
       const accessToken = localStorage.getItem("access_token");
-      const response = await axios.get(`${API_BASE_URL}/api/books/`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      const userBorrowedBooks = response.data.filter(
-        (book) => book.borrowed_by === user?.email
+      const response = await axios.get(
+        `${API_BASE_URL}/api/books/?borrowed_by=${user?.email}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
       );
-      setBorrowedBooks(userBorrowedBooks);
-      setFilteredBooks(userBorrowedBooks);
+      setBorrowedBooks(response.data.results);
     } catch (error) {
       console.error("Error fetching borrowed books:", error);
     }
@@ -72,15 +68,13 @@ const BorrowedBooks = () => {
         Your Borrowed Books
       </h2>
 
-      <SearchBar books={borrowedBooks} onSearchResults={setFilteredBooks} />
-
-      {filteredBooks.length === 0 ? (
+      {borrowedBooks.length === 0 ? (
         <p className="text-[var(--secondary-color)] text-lg text-center mt-4">
           You have not borrowed any books.
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mt-6">
-          {filteredBooks.map((book) => {
+          {borrowedBooks.map((book) => {
             const overdue = isOverdue(book.due_date);
 
             return (

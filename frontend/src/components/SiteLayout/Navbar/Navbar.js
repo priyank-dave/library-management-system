@@ -35,7 +35,7 @@ const Navbar = ({ toggleSidebar }) => {
 
   return (
     <>
-      <nav className="bg-[var(--bg-light)] border-b border-[var(--border-color)] shadow-md">
+      <nav className="bg-[var(--bg-light)] border-b border-[var(--border-color)] shadow-md ">
         <div className="container mx-auto flex justify-between items-center px-6 py-3">
           {/* Left: Sidebar Toggle + Logo */}
           <div className="flex items-center gap-4">

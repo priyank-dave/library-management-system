@@ -19,7 +19,7 @@ const ManageBooks = () => {
         const response = await fetch(`${API_BASE_URL}/api/books/`);
         const data = await response.json();
         setBooks(data);
-        setFilteredBooks(data);
+        setFilteredBooks(data.results);
       } catch (error) {
         console.error("Error fetching books:", error);
       }
