@@ -35,8 +35,8 @@ if not admin.site.is_registered(User):
 
 # Book Admin
 class BookAdmin(admin.ModelAdmin):
-    list_display = ("title", "author", "published_date")
-    search_fields = ("title", "author")
+    list_display = ("isbn", "title", "author", "published_date")
+    search_fields = ("isbn", "title", "author")
     list_filter = ("published_date",)
 
 

@@ -7,22 +7,24 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const EditBookPage = () => {
   const router = useRouter();
-  const { id } = useParams();
+  const { isbn } = useParams();
 
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
+    isbn: "",
     title: "",
     author: "",
     published_date: "",
+    category: "",
     image: null,
   });
 
-  const [preview, setPreview] = useState("/default-book.png"); // Default placeholder
+  const [preview, setPreview] = useState("/default-book.png");
 
   useEffect(() => {
-    // Fetch book details
     const fetchBook = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/books/${id}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/books/${isbn}/`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
@@ -31,10 +33,12 @@ const EditBookPage = () => {
         if (response.ok) {
           const book = await response.json();
           setFormData({
+            isbn: book.isbn || "",
             title: book.title || "",
             author: book.author || "",
             published_date: book.published_date || "",
-            image: null, // Image field remains null until changed
+            category: book.category?.id || "", // Ensure the category ID is correctly set here
+            image: null,
           });
 
           if (book.image) {
@@ -48,8 +52,28 @@ const EditBookPage = () => {
       }
     };
 
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/categories/`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.results);
+        } else {
+          console.error("Failed to fetch categories");
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
     fetchBook();
-  }, [id]);
+    fetchCategories();
+  }, [isbn]);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -62,15 +86,18 @@ const EditBookPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formDataToSend = new FormData();
+    formDataToSend.append("isbn", formData.isbn);
     formDataToSend.append("title", formData.title);
     formDataToSend.append("author", formData.author);
     formDataToSend.append("published_date", formData.published_date);
+    formDataToSend.append("category", formData.category);
+
     if (formData.image) {
       formDataToSend.append("image", formData.image);
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/books/${id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/books/${isbn}/`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -116,6 +143,18 @@ const EditBookPage = () => {
       {/* Book Info Form */}
       <form className="flex flex-col mt-4" onSubmit={handleSubmit}>
         <label className="text-sm font-medium">
+          ISBN <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.isbn}
+          onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
+          className="border p-2 rounded mb-3"
+          required
+          disabled // Prevent changing ISBN
+        />
+
+        <label className="text-sm font-medium">
           Title <span className="text-red-500">*</span>
         </label>
         <input
@@ -149,6 +188,28 @@ const EditBookPage = () => {
           className="border p-2 rounded mb-3"
           required
         />
+
+        {/* Category Select Dropdown */}
+        <label className="text-sm font-medium">
+          Category <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={formData.category_name}
+          onChange={(e) =>
+            setFormData({ ...formData, category: e.target.value })
+          }
+          className="border p-2 rounded mb-3"
+          required
+        >
+          <option value="" disabled>
+            Select a category
+          </option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
 
         <button
           type="submit"

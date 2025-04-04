@@ -4,41 +4,36 @@ import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
 
 const AdminLogin = () => {
-  const { loginUser, loginWithGoogle } = useAuth(); // Use AuthContext
+  const { login } = useAuth(); // Use the unified login function
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle JWT Login
+  // Handle Admin Login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      await loginUser(form.email, form.password); // Use context function
-      router.push("/"); // Redirect after login
+      await login(form.email, form.password, true); // Pass 'true' for admin login
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex h-screen">
-      {/* Left: Image Section */}
-
       {/* Right: Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8">
         <h2 className="text-3xl font-bold text-[var(--primary-color)] mb-6">
@@ -77,7 +72,7 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        {/* Don't have an account? */}
+        {/* Not an Admin? */}
         <p className="mt-4 text-[var(--secondary-color)]">
           Not an admin?{" "}
           <Link
@@ -88,6 +83,8 @@ const AdminLogin = () => {
           </Link>
         </p>
       </div>
+
+      {/* Left: Image Section */}
       <div className="w-1/2 hidden lg:block relative bg-[var(--primary-color)]">
         <Image
           src="/admin-illustration.webp"

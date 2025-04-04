@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext"; // Import AuthContext
 
-const Login = () => {
-  const { loginUser, loginWithGoogle } = useAuth(); // Use AuthContext
+const UserLogin = () => {
+  const { login, loginWithGoogle } = useAuth(); // Use AuthContext
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -28,8 +27,7 @@ const Login = () => {
     setError("");
 
     try {
-      await loginUser(form.email, form.password); // Use context function
-      router.push("/"); // Redirect after login
+      await login(form.email, form.password); // Default isLibrarian = false
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {
@@ -41,7 +39,7 @@ const Login = () => {
   const handleGoogleSuccess = async (response) => {
     try {
       await loginWithGoogle(response.credential); // Use context function
-      router.push("/"); // Redirect after Google login
+      router.push("/dashboard"); // Redirect after Google login
     } catch (error) {
       setError("Google login failed. Try again.");
     }
@@ -125,4 +123,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default UserLogin;

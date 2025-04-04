@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, Book
+from .models import User, Book, Category, Notification, FavoriteBook
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture = serializers.ImageField(required=False)  # Ensure it's optional
+    profile_picture = serializers.ImageField(required=False)
 
     class Meta:
         model = User
@@ -77,10 +77,58 @@ class LoginSerializer(serializers.Serializer):
 
 
 class BookSerializer(serializers.ModelSerializer):
-    borrowed_by = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), allow_null=True, required=False
+    borrowed_by = serializers.SerializerMethodField()
+    is_borrowed = serializers.SerializerMethodField()
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), write_only=True
     )
+    overdue_fee = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
-        fields = "__all__"
+        fields = [
+            "isbn",
+            "title",
+            "author",
+            "published_date",
+            "image",
+            "pdf",
+            "borrowed_by",
+            "is_borrowed",
+            "category",
+            "category_name",
+            "due_date",
+            "fine_per_day",
+            "overdue_fee",
+        ]
+
+    def get_borrowed_by(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.borrowed_by.email if obj.borrowed_by else None
+        return None
+
+    def get_is_borrowed(self, obj):
+        return bool(obj.borrowed_by)
+
+    def get_overdue_fee(self, obj):
+        return obj.calculate_overdue_fee()
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ["id", "name"]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "message", "is_read", "timestamp"]
+
+
+class FavoriteBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteBook
+        fields = ["isbn"]

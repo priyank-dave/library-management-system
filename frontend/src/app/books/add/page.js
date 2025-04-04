@@ -1,21 +1,47 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import axios from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const AddBookPage = () => {
   const router = useRouter();
-
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
+    isbn: "",
     title: "",
     author: "",
     published_date: "",
+    category: "",
     image: null,
+    pdf: null,
   });
 
   const [preview, setPreview] = useState("/default-book.png"); // Placeholder image
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const accessToken = localStorage.getItem("access_token");
+
+      if (!accessToken) {
+        console.error("No access token found.");
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/categories/`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setCategories(response.data.results);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -25,14 +51,28 @@ const AddBookPage = () => {
     }
   };
 
+  const handlePdfChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setFormData({ ...formData, pdf: file });
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     const formDataToSend = new FormData();
+    formDataToSend.append("isbn", formData.isbn);
     formDataToSend.append("title", formData.title);
     formDataToSend.append("author", formData.author);
     formDataToSend.append("published_date", formData.published_date);
+    formDataToSend.append("category", formData.category); // Send as plain value
+
     if (formData.image) {
       formDataToSend.append("image", formData.image);
+    }
+    if (formData.pdf) {
+      formDataToSend.append("pdf", formData.pdf);
     }
 
     try {
@@ -40,14 +80,16 @@ const AddBookPage = () => {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          // ❌ Do NOT set "Content-Type" when using FormData (let the browser handle it)
         },
         body: formDataToSend,
       });
 
       if (response.ok) {
-        router.push("/books"); // Redirect to book list after adding
+        router.push("/"); // Redirect to book list after adding
       } else {
-        console.error("Failed to add book");
+        const errorData = await response.json();
+        console.error("Failed to add book:", errorData);
       }
     } catch (error) {
       console.error("Error adding book:", error);
@@ -81,6 +123,17 @@ const AddBookPage = () => {
 
       {/* Book Info Form */}
       <form className="flex flex-col mt-4" onSubmit={handleSubmit}>
+        <label className="text-sm font-medium">
+          ISBN <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.isbn}
+          onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
+          className="border p-2 rounded mb-3"
+          required
+        />
+
         <label className="text-sm font-medium">
           Title <span className="text-red-500">*</span>
         </label>
@@ -116,9 +169,43 @@ const AddBookPage = () => {
           required
         />
 
+        {/* Category Select Dropdown */}
+        <label className="text-sm font-medium">
+          Category <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={formData.category}
+          onChange={(e) =>
+            setFormData({ ...formData, category: e.target.value })
+          }
+          className="border p-2 rounded mb-3"
+          required
+        >
+          <option value="" disabled>
+            Select a category
+          </option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+
+        {/* PDF Upload Section */}
+        <label className="text-sm font-medium">
+          PDF <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="file"
+          accept="application/pdf"
+          className="border p-2 rounded mb-3"
+          onChange={handlePdfChange}
+          required
+        />
+
         <button
           type="submit"
-          className="px-4 py-1 text-sm font-medium text-white rounded"
+          className="px-4 py-2 text-sm font-medium text-white rounded"
           style={{ backgroundColor: "var(--primary-color)" }}
         >
           Add Book

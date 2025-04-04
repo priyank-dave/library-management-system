@@ -1,44 +1,63 @@
-import { useAuth } from "@/context/AuthContext";
+"use client";
+
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { LayoutDashboard, BookOpen, Layers, LogOut } from "lucide-react";
 
-export default function Sidebar({ isOpen, toggleSidebar }) {
-  const { logoutUser } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    logoutUser(); // Logout user using the context
-    toggleSidebar(); // Close sidebar after logging out
-  };
+export default function Sidebar({ isOpen }) {
+  const { user, logoutUser } = useAuth(); // Get user & logout function
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transform ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      } transition-transform duration-300 ease-in-out z-50 shadow-lg`}
+      className={`fixed top-0 left-0 h-full w-64 bg-[var(--bg-light)] border-r border-[var(--border-color)] shadow-lg transition-all duration-300 ${
+        isOpen ? "translate-x-0" : "-translate-x-64"
+      }`}
     >
-      {/* Close Button */}
-      <button onClick={toggleSidebar} className="p-4 text-right text-white">
-        ✕
-      </button>
-
-      {/* Sidebar Links */}
-      <ul className="mt-4">
-        <li
-          onClick={() => {
-            router.push("/user/profile"); // Navigate to the profile page
-            toggleSidebar(); // Close sidebar after clicking
-          }}
-          className="p-4 hover:bg-gray-700 cursor-pointer"
-        >
-          Profile
+      <ul className="text-[var(--text-black)] p-6 space-y-2">
+        {/* Dashboard Link */}
+        <li>
+          <Link
+            href="/user/dashboard"
+            className="flex items-center gap-3 p-3 hover:bg-[var(--primary-color)] hover:text-white cursor-pointer rounded-md"
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            Dashboard
+          </Link>
         </li>
 
-        <li
-          onClick={handleLogout}
-          className="p-4 hover:bg-gray-700 cursor-pointer"
-        >
-          Logout
+        {/* Borrowed Books Link */}
+        <li>
+          <Link
+            href="/user/borrowed-books"
+            className="flex items-center gap-3 p-3 hover:bg-[var(--primary-color)] hover:text-white cursor-pointer rounded-md"
+          >
+            <BookOpen className="w-5 h-5" />
+            Borrowed Books
+          </Link>
+        </li>
+
+        {/* Manage Books Link (Only for Librarians) */}
+        {user?.is_librarian && (
+          <li>
+            <Link
+              href="/user/manage-books"
+              className="flex items-center gap-3 p-3 hover:bg-[var(--primary-color)] hover:text-white cursor-pointer rounded-md"
+            >
+              <Layers className="w-5 h-5" />
+              Manage Books
+            </Link>
+          </li>
+        )}
+
+        {/* Logout Button */}
+        <li>
+          <button
+            onClick={logoutUser}
+            className="flex w-full items-center gap-3 p-3 hover:bg-red-600 hover:text-white cursor-pointer rounded-md"
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
         </li>
       </ul>
     </div>
