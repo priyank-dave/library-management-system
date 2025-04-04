@@ -1,6 +1,7 @@
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.urls import path
 from .views import (
+    FavoriteBookToggleView,
     RegisterView,
     UserLoginView,
     AdminLoginView,
@@ -15,6 +16,8 @@ from .views import (
     NotificationListView,
     MarkNotificationAsReadView,
     PayFeeView,
+    FavoriteBookListCreateView,
+    FavoriteBookDetailView,
 )
 
 urlpatterns = [
@@ -37,4 +40,15 @@ urlpatterns = [
         name="mark-notification-read",
     ),
     path("pay-fee/", PayFeeView.as_view(), name="pay-fee"),
+    path("favorites/", FavoriteBookListCreateView.as_view(), name="favorite-list"),
+    path(
+        "favorite/<str:isbn>/",
+        FavoriteBookToggleView.as_view(),
+        name="favorite-toggle",
+    ),
+    path(
+        "favorite/check/<str:isbn>/",
+        FavoriteBookDetailView.as_view(),
+        name="favorite-check",
+    ),
 ]

@@ -98,3 +98,17 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.email} - {self.message}"
+
+
+class FavoriteBook(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    isbn = models.CharField(max_length=20)
+
+    class Meta:
+        unique_together = (
+            "user",
+            "isbn",
+        )  # Ensures a user can't favorite the same book multiple times
+
+    def __str__(self):
+        return f"{self.user.email} - {self.isbn}"

@@ -34,7 +34,7 @@ const AddBookPage = () => {
         const response = await axios.get(`${API_BASE_URL}/api/categories/`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        setCategories(response.data);
+        setCategories(response.data.results);
       } catch (error) {
         console.error("Failed to fetch categories:", error);
       }

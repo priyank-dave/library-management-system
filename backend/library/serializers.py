@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, Book, Category, Notification
+from .models import User, Book, Category, Notification, FavoriteBook
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -126,3 +126,9 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ["id", "message", "is_read", "timestamp"]
+
+
+class FavoriteBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteBook
+        fields = ["isbn"]

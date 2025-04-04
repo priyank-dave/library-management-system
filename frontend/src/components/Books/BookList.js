@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { Star } from "lucide-react";
 import SearchBar from "@/components/SearchBar/SearchBar";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -12,12 +13,54 @@ const BookList = ({ books }) => {
   const { user } = useAuth();
   const [borrowedBooks, setBorrowedBooks] = useState({});
   const [borrowedBooksByOthers, setBorrowedBooksByOthers] = useState({});
+  const [favoriteBooks, setFavoriteBooks] = useState(new Set());
 
   useEffect(() => {
     if (user) {
       fetchBorrowedBooks();
+      fetchFavoriteBooks();
     }
   }, [user]);
+
+  const fetchFavoriteBooks = async () => {
+    try {
+      const accessToken = localStorage.getItem("access_token");
+      const response = await axios.get(`${API_BASE_URL}/api/favorites/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const favorites = new Set(response.data.map((book) => book.isbn));
+      setFavoriteBooks(favorites);
+    } catch (error) {
+      console.error("Error fetching favorite books:", error);
+    }
+  };
+
+  const toggleFavorite = async (isbn) => {
+    try {
+      const accessToken = localStorage.getItem("access_token");
+      const url = `${API_BASE_URL}/api/favorite/${isbn}/`;
+
+      if (favoriteBooks.has(isbn)) {
+        await axios.delete(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setFavoriteBooks(
+          (prev) => new Set([...prev].filter((id) => id !== isbn))
+        );
+      } else {
+        await axios.post(
+          url,
+          {},
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+        setFavoriteBooks((prev) => new Set(prev).add(isbn));
+      }
+    } catch (error) {
+      console.error("Error toggling favorite status:", error);
+    }
+  };
 
   const fetchBorrowedBooks = async () => {
     try {
@@ -117,6 +160,7 @@ const BookList = ({ books }) => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mt-6">
           {filteredBooks.map((book) => {
+            const isFavorite = favoriteBooks.has(book.isbn);
             const isBorrowed = borrowedBooks.hasOwnProperty(book.isbn);
             const borrowedByOther = borrowedBooksByOthers[book.isbn];
             const dueDate = borrowedBooks[book.isbn]?.due_date || null;
@@ -128,6 +172,24 @@ const BookList = ({ books }) => {
                 key={book.isbn}
                 className="relative group flex flex-col items-center w-48 bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-visible cursor-pointer"
               >
+                {user && (
+                  <button
+                    className="absolute top-2 right-2 z-10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(book.isbn);
+                    }}
+                  >
+                    <Star
+                      size={24}
+                      className={
+                        isFavorite
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-400"
+                      }
+                    />
+                  </button>
+                )}
                 <Link href={`/books/${book.isbn}`} passHref className="w-full">
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[var(--primary-color)] text-white text-sm p-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-60 z-50 pointer-events-none">
                     <h3 className="font-semibold">{book.title}</h3>

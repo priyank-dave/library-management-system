@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import axios from "axios";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
+import { Star } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -15,10 +16,12 @@ export default function BookDetailPage() {
   const [loading, setLoading] = useState(true);
   const [borrowedBooks, setBorrowedBooks] = useState({});
   const [borrowedBooksByOthers, setBorrowedBooksByOthers] = useState({});
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     if (isbn) {
       fetchBook();
+      checkFavoriteStatus();
     }
   }, [isbn]);
 
@@ -39,6 +42,37 @@ export default function BookDetailPage() {
     }
   };
 
+  const checkFavoriteStatus = async () => {
+    try {
+      const accessToken = localStorage.getItem("access_token");
+      const response = await axios.get(
+        `${API_BASE_URL}/api/favorite/check/${isbn}/`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      setIsFavorite(response.data.favorited);
+    } catch (error) {
+      console.error("Failed to check favorite status:", error);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    try {
+      const accessToken = localStorage.getItem("access_token");
+      await axios.post(
+        `${API_BASE_URL}/api/favorite/${isbn}/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+    }
+  };
+
   const fetchBorrowedBooks = async () => {
     try {
       const accessToken = localStorage.getItem("access_token");
@@ -49,7 +83,7 @@ export default function BookDetailPage() {
       const userBorrowed = {};
       const othersBorrowed = {};
 
-      response.data.forEach((book) => {
+      response.data.results.forEach((book) => {
         if (book.borrowed_by === user?.email) {
           userBorrowed[String(book.isbn)] = book.due_date || "Unknown";
         } else if (book.borrowed_by) {
@@ -68,7 +102,7 @@ export default function BookDetailPage() {
     }
   };
 
-  const handleBorrowReturn = async (isbn, action) => {
+  const handleBorrowReturn = async (action) => {
     const confirmMessage =
       action === "borrow"
         ? "Are you sure you want to borrow this book?"
@@ -78,6 +112,23 @@ export default function BookDetailPage() {
 
     try {
       const accessToken = localStorage.getItem("access_token");
+
+      if (action === "return" && borrowedBooks[isbn]?.fee > 0) {
+        const payConfirm = window.confirm(
+          `You have an overdue fee of $${borrowedBooks[isbn].fee}. Pay now?`
+        );
+        if (!payConfirm) return;
+
+        await axios.post(
+          `${API_BASE_URL}/api/pay-fee/`,
+          {
+            isbn,
+            amount: borrowedBooks[isbn].fee,
+          },
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+      }
+
       await axios.post(
         `${API_BASE_URL}/api/books/${isbn}/${action}/`,
         {},
@@ -85,6 +136,11 @@ export default function BookDetailPage() {
       );
 
       fetchBorrowedBooks();
+
+      if (window.refreshNotifications) {
+        console.log("Refreshing Notifications");
+        window.refreshNotifications();
+      }
     } catch (error) {
       console.error(`Failed to ${action} book:`, error);
     }
@@ -117,7 +173,7 @@ export default function BookDetailPage() {
   return (
     <div className="container mx-auto px-6 py-10 flex flex-col md:flex-row gap-6 md:gap-10 items-center">
       {/* Book Cover */}
-      <div className="w-full md:w-1/2 flex justify-center">
+      <div className="w-full md:w-1/2 flex justify-center relative">
         <Image
           src={book.image ? `${book.image}` : "/default-book.jpg"}
           alt={book.title}
@@ -126,6 +182,22 @@ export default function BookDetailPage() {
           className="rounded-lg shadow-lg object-cover"
           unoptimized
         />
+        {user && (
+          <button
+            className="absolute top-2 right-2 z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(book.isbn);
+            }}
+          >
+            <Star
+              size={24}
+              className={
+                isFavorite ? "text-yellow-400 fill-current" : "text-gray-400"
+              }
+            />
+          </button>
+        )}
       </div>
 
       {/* Book Information */}
@@ -193,7 +265,7 @@ export default function BookDetailPage() {
           {user && !borrowedByOther && (
             <button
               onClick={() =>
-                handleBorrowReturn(book.isbn, isBorrowed ? "return" : "borrow")
+                handleBorrowReturn(isBorrowed ? "return" : "borrow")
               }
               className={`px-4 py-2 text-white text-sm font-semibold rounded-md ${
                 isBorrowed

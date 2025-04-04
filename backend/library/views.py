@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 import requests
 from rest_framework import generics, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -5,13 +6,14 @@ from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .models import Book, Category, Notification
+from .models import Book, Category, Notification, FavoriteBook
 from .serializers import (
     BookSerializer,
     UserSerializer,
     LoginSerializer,
     CategorySerializer,
     NotificationSerializer,
+    FavoriteBookSerializer,
 )
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -396,3 +398,53 @@ class PayFeeView(APIView):
                 {"error": "Book not found or not borrowed by this user"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+class FavoriteBookListCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        favorites = FavoriteBook.objects.filter(user=request.user)
+        serializer = FavoriteBookSerializer(favorites, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FavoriteBookToggleView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, isbn):
+        user = request.user
+        favorite, created = FavoriteBook.objects.get_or_create(user=user, isbn=isbn)
+
+        if created:
+            return Response(
+                {"message": "Book added to favorites"}, status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {"message": "Book is already in favorites"}, status=status.HTTP_200_OK
+            )
+
+    def delete(self, request, isbn):
+        user = request.user
+        try:
+            favorite = FavoriteBook.objects.get(user=user, isbn=isbn)
+            favorite.delete()
+            return Response(
+                {"message": "Book removed from favorites"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except FavoriteBook.DoesNotExist:
+            return Response(
+                {"error": "Book not found in favorites"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class FavoriteBookDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, isbn):
+        user = request.user
+        is_favorited = FavoriteBook.objects.filter(user=user, isbn=isbn).exists()
+        return Response({"favorited": is_favorited})

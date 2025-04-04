@@ -105,7 +105,6 @@ const NotificationDropdown = () => {
                   } hover:bg-gray-200`}
                   onClick={() => {
                     markAsRead(notif.id);
-                    router.push(notif.link || "/");
                   }}
                 >
                   {notif.is_read ? (

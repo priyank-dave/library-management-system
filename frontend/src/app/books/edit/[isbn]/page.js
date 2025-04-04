@@ -37,7 +37,7 @@ const EditBookPage = () => {
             title: book.title || "",
             author: book.author || "",
             published_date: book.published_date || "",
-            category: book.category || "",
+            category: book.category?.id || "", // Ensure the category ID is correctly set here
             image: null,
           });
 
@@ -194,7 +194,7 @@ const EditBookPage = () => {
           Category <span className="text-red-500">*</span>
         </label>
         <select
-          value={formData.category}
+          value={formData.category_name}
           onChange={(e) =>
             setFormData({ ...formData, category: e.target.value })
           }
